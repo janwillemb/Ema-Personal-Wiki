@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<string name="about">About</string>
+	<string name="about_text">![Ema Personal
+		Wiki](http://janwillemboer.nl/ema/android/about_ema.png)\n\n
+		**Ema Personal Wiki for Android**, version 1.0, is a notebook with linkable
+		pages for tracking your ideas, tasks, projects, notes,
+		brainstorms - in short, your life - in the most flexible way. \n\n
+		This software was written by Jan Willem Boer in 2010. You can contact him
+		with suggestions or bugs
+		at ema@janwillemboer.nl or via the website
+		&lt;http://www.janwillemboer.nl/blog/ema-personal-wiki&gt;.\n\n
+		This software is provided \'as-is\', without any express or implied
+		warranty. In no event will the author(s) be held liable for any
+		damages
+		arising from the use of this software.\n\n
+		If you bought this software, this means you have bought a license, which
+		allows you personally to use the software.
+		So, if you buy a new Android device, or if you have two Android devices,
+		you may install the software more
+		than once. Please contact Jan Willem Boer in case of any trouble with
+		this. And because the author is
+		in a generous mood, you may also install the software for your spouse
+		and children if this helps you and/or
+		them.\n\n
+		This software is also available as a Windows app for a desktop computer.
+		If you bought the Android app,
+		you can download the Windows Ema Personal Wiki app too.  
+  </string>
+	<string name="add_page">Add</string>
+	<string name="app_name">Ema Personal Wiki</string>
+	<string name="back">Back</string>
+	<string name="confirm">OK</string>
+	<string name="cancel">Cancel</string>
+	<string name="default_page_text">Home\n======\n\nThis is the homepage for your
+		personal wiki. You can edit this page by
+		touching the Edit button in
+		the toolbar.\n\n
+		Create a link to a new or existing page by surrounding
+		a word with curly
+		brackets like {Todo}, or by using a WikiWord (a word
+		with mixed casing).\n\n
+
+		To synchronize the wiki pages between this device and a desktop
+		computer, enter your Dropbox credentials via
+		\'Sync Settings\' in the menu.\n\n
+
+		This wiki uses [Markdown formatting](http://en.wikipedia.org/wiki/Markdown#Syntax_examples)
+		for text editing.\n\n
+
+		![Ema Personal
+		Wiki](http://janwillemboer.nl/ema/android/about_ema.png)\n\n
+
+		Ema Personal Wiki, version 1.0, is a notebook with linkable pages for
+		tracking your ideas, tasks, projects, notes, brainstorms - in short,
+		your life - in the most flexible way.
+		If you have any further
+		questions, don\'t hesitate to contact the
+		developer at
+		ema@janwillemboer.nl or go to
+		&lt;http://www.janwillemboer.nl/blog/ema-personal-wiki&gt;.</string>
+	<string name="delete">Delete</string>
+	<string name="do_dropbox_login">Log in</string>
+	<string name="do_dropbox_logout">Forget credentials</string>
+	<string name="dropbox_explanation">Dropbox login data</string>
+	<string name="dropbox_login">User</string>
+	<string name="dropbox_password">Password</string>
+	<string name="edit">Edit</string>
+	<string name="edit_css">Edit CSS</string>
+	<string name="enter_valid_email">Please enter a seemingly valid emailaddress for
+		username.</string>
+	<string name="enter_password">Please enter your password.</string>
+	<string name="help">Help</string>
+	<string name="help_text"></string>
+	<string name="home">Home</string>
+	<string name="list_pages">Pages</string>
+	<string name="list_pages_long">List of pages</string>
+	<string name="login_success">Logged in to Dropbox successfully.</string>
+	<string name="more">More</string>
+	<string name="newpage_name_entername">Enter new page name:</string>
+	<string name="no_pages">No pages in this list.</string>
+	<string name="open">Open</string>
+	<string name="page_error">An error occurred loading the page.</string>
+	<string name="page_exists">A page with this name already exists.</string>
+	<string name="provide_credentials">Please provide your Dropbox credentials first.
+	</string>
+	<string name="quit">Quit</string>
+	<string name="save">Save</string>
+	<string name="save_error">An error occurred while saving the page.</string>
+	<string name="storage_not_accessible">The SD card is not accessible.</string>
+	<string name="storage_dir_creation_failed">Could not create directory PersonalWiki on the SD
+		card.</string>
+	<string name="sync">Sync</string>
+	<string name="sync_settings">Sync settings</string>
+	<string name="sync_frequency">Sync frequency</string>
+	<string name="sync_when_starting_app">On application startup</string>
+	<string name="sync_after_edit">After editing a page</string>
+	<string name="sync_periodically">Periodically</string>
+	<string name="sync_periodically_minutes">Interval (minutes)</string>
+	<string name="synchronizing">Syncing</string>
+	<string name="syncError">There was a synchronization error.</string>
+	<string name="unknownMimetype">Could not find the app to view this file.</string>
+</resources>

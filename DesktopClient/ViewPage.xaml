@@ -1,0 +1,65 @@
+﻿<Window x:Class="EmaPersonalWiki.ViewPage"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Ema Personal Wiki" Height="600" Width="700" MinHeight="345" MinWidth="554" 
+        Icon="/EmaPersonalWiki;component/icons/icon.ico" WindowStartupLocation="CenterScreen">
+    <Grid Background="{x:Static SystemColors.ControlLightBrush}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="23"/>
+            <RowDefinition Height="57" />
+            <RowDefinition Height="275*" />
+        </Grid.RowDefinitions>
+        <Menu HorizontalAlignment="Stretch" Name="menu1" VerticalAlignment="Stretch">
+            <MenuItem Header="_File">
+                <MenuItem Header="_Settings" Click="MenuItemSettings_Click"/>
+                <Separator/>
+                <MenuItem Header="_Close" Click="MenuItemClose_Click" InputGestureText="Alt+F4"/>
+            </MenuItem>
+            <MenuItem Header="_Wiki">
+                <MenuItem Header="_Back" Command="{Binding BackCommand}"/>
+                <MenuItem Header="_Home" Command="{Binding HomeCommand}"/>
+                <Separator/>
+                <MenuItem Header="_Edit page" Command="{Binding EditCommand}" InputGestureText="Ctrl+E"/>
+                <Separator/>
+                <MenuItem Header="_Delete page" Click="MenuItemDelete_Click"/>
+            </MenuItem>
+            <MenuItem Header="_Help">
+                <MenuItem Header="_Help" Click="MenuHelp_Click"/>
+                <MenuItem Header="_About" Click="MenuAbout_Click"/>
+            </MenuItem>
+        </Menu>
+
+        <Border HorizontalAlignment="Stretch" Margin="5,0,5,5" VerticalAlignment="Stretch"  Grid.Row="2" 
+                BorderBrush="#FF868686" BorderThickness="1">
+            <WebBrowser Name="webBrowser1"  />
+        </Border>
+        <Button TabIndex="2" Height="48" Margin="107,5,0,0" Name="buttonHome" VerticalAlignment="Top" HorizontalAlignment="Left" Width="96" Click="buttonHome_Click" Grid.Row="1">
+            <StackPanel Orientation="Horizontal">
+                <Image Source="/EmaPersonalWiki;component/icons/gohome.png"/>
+                <TextBlock Margin="3,12,0,0">Home</TextBlock>
+            </StackPanel>
+        </Button>
+        <Button  TabIndex="1" Height="48" Margin="7,5,0,0" Name="buttonBack" VerticalAlignment="Top" Click="buttonBack_Click" HorizontalAlignment="Left" Width="96" Grid.Row="1">
+            <StackPanel Orientation="Horizontal">
+                <Image Source="/EmaPersonalWiki;component/icons/back.png"/>
+                <TextBlock Margin="3,12,0,0">Back</TextBlock>
+            </StackPanel>
+        </Button>
+        <Button TabIndex="5" Height="32" Margin="0,5,5,0" Name="buttonFind" VerticalAlignment="Top"  Grid.Row="1"
+                HorizontalAlignment="Right" Width="32" Click="buttonFind_Click" IsDefault="True">
+                <Image Source="/EmaPersonalWiki;component/icons/kfind.png" Width="22" Height="22"/>
+        </Button>
+
+        <Button TabIndex="3" Height="48" Margin="209,5,0,0" Name="buttonEdit" VerticalAlignment="Top"  Grid.Row="1"
+                HorizontalAlignment="Left" Width="96" Click="buttonEdit_Click" >
+            <StackPanel Orientation="Horizontal">
+                <Image Source="/EmaPersonalWiki;component/icons/edit-select-all.png"/>
+                <TextBlock Margin="3,12,0,0">Edit</TextBlock>
+            </StackPanel>
+        </Button>
+        <TextBox TabIndex="4" Height="32" HorizontalAlignment="Right" Margin="0,5,43,0" Name="textBoxSearch"  Grid.Row="1"
+                 VerticalAlignment="Top" Width="155" Text="search wiki" FontSize="12" FontStyle="Italic" 
+                 Foreground="#52000000" FontFamily="Trebuchet MS" Padding="5,7,0,0" GotFocus="textBoxSearch_GotFocus"
+                 LostFocus="textBoxSearch_LostFocus" />
+    </Grid>
+</Window>

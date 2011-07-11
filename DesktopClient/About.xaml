@@ -1,0 +1,28 @@
+﻿<Window x:Class="EmaPersonalWiki.About"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="About" Height="351" Width="398" WindowStyle="ThreeDBorderWindow" WindowStartupLocation="CenterScreen" ResizeMode="NoResize" ShowInTaskbar="False">
+    <Grid>
+        <TextBlock Margin="12,12,18,189" Name="textBlock1" TextWrapping="WrapWithOverflow">
+            <TextBlock.Text>
+Ema Personal Wiki, version 1.6, is a notebook with linkable pages for tracking your ideas, tasks, projects, notes, brainstorms - in short, your life - in the most flexible way.
+            </TextBlock.Text>
+        </TextBlock>
+        <TextBlock Margin="12,147,18,12" Name="textBlock2" TextWrapping="WrapWithOverflow">
+            <TextBlock.Text>
+The Windows desktop application is free if you bought the Ema Personal Wiki 1.x app for Android, otherwise you will have to pay a small amount, see the website for details. If you have bought a license, it allows you personally to use the software. So, if you buy a new computer, or if you are using two computers, you may install the software more than once. Please contact Jan Willem Boer in case of any trouble with this. And because the author is in a generous mood, you may also install the software for your spouse and children if this helps you and/or them.                
+            </TextBlock.Text>
+        </TextBlock>
+        <TextBlock Margin="12,98,18,103" Name="textBlock3" TextWrapping="WrapWithOverflow">
+            <TextBlock.Text>
+This software is provided 'as-is', without any express or implied warranty.  In no event will the author(s) be held liable for any damages arising from the use of this software.
+            </TextBlock.Text>
+        </TextBlock>
+        <TextBlock Margin="12,63,18,138" Name="textBlock4" TextWrapping="WrapWithOverflow">
+            <TextBlock.Text>
+This software was written by Jan Willem Boer in 2010. You can contact him with suggestions or bugs at ema@janwillemboer.nl.
+            </TextBlock.Text>
+        </TextBlock>
+        <Button Content="OK" Height="23" HorizontalAlignment="Left" Margin="289,277,0,0" Name="button1" VerticalAlignment="Top" Width="75" IsDefault="True" Click="button1_Click" />
+    </Grid>
+</Window>

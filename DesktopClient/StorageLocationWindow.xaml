@@ -1,0 +1,26 @@
+﻿<Window x:Class="EmaPersonalWiki.StorageLocationWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Storage location" Height="300" Width="300" ResizeMode="CanResize" MinHeight="300" MinWidth="300">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="77" />
+            <RowDefinition Height="65" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <TextBlock HorizontalAlignment="Stretch" VerticalAlignment="Stretch" TextWrapping="WrapWithOverflow" Margin="12,12,12,0">
+            <TextBlock.Text>Ema Personal Wiki stores it's files locally as text files in a directory. When this is a Dropbox folder, the files
+                are synchronized automatically. You don't seem to have Dropbox installed. 
+            </TextBlock.Text>
+        </TextBlock>
+        <TextBlock HorizontalAlignment="Stretch" VerticalAlignment="Stretch" TextWrapping="WrapWithOverflow" Grid.Row="1" Margin="12,0">
+            <TextBlock.Text>Please specify the location where Ema Personal Wiki can store it's files, or install Dropbox and restart this
+                application.
+            </TextBlock.Text>
+        </TextBlock>
+        <TextBox Grid.Row="2" Height="23" HorizontalAlignment="Stretch" Name="textBoxDirectory" VerticalAlignment="Top" Margin="12,0" />
+        <Button Content="Select directory" Grid.Row="2" Height="23" HorizontalAlignment="Right" Margin="0,29,12,0" Name="buttonSelect" VerticalAlignment="Top" Width="91" Click="buttonSelect_Click" />
+        <Button Content="OK" Height="23" HorizontalAlignment="Right" Margin="0,0,93,12" Name="buttonOK" VerticalAlignment="Bottom" Width="75" Grid.Row="2" IsDefault="True" Click="buttonOK_Click" />
+        <Button Content="Cancel" Grid.Row="2" Height="23" HorizontalAlignment="Right" Margin="0,0,12,12" Name="buttonCancel" VerticalAlignment="Bottom" Width="75" IsCancel="True" />
+    </Grid>
+</Window>

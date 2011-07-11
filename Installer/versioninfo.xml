@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<versioninfo>
+  <upgrade version="11" installer="EmaPersonalWiki-v1.6.11-Installer.exe" ask="true">
+    <info>Version 1.6.11 adds commandline support. Pass a pagename to the commandline to open that page when starting Ema.</info>
+    <file name="EmaPersonalWiki-v1.6.11-Installer.exe"/>
+  </upgrade>
+  <upgrade version="10" installer="EmaPersonalWiki-v1.5.10-Installer.exe" ask="true">
+    <info>Version 1.5.10 fixes a crash during startup on computers running XP.</info>
+    <file name="EmaPersonalWiki-v1.5.10-Installer.exe"/>
+  </upgrade>
+  <upgrade version="9" installer="EmaPersonalWiki-v1.5.9-Installer.exe" ask="true">
+    <info>Version 1.5.9 adds support for the recent Dropbox upgrade (v1.0.10).</info>
+    <file name="EmaPersonalWiki-v1.5.9-Installer.exe"/>
+  </upgrade>
+  <upgrade version="8" installer="EmaPersonalWiki-v1.5.8-Installer.exe" ask="true">
+    <info>Version 1.5.8 fixes a bug in the handling of attachments of pages that have a name with
+      spaces in it.</info>
+    <file name="EmaPersonalWiki-v1.5.8-Installer.exe"/>
+  </upgrade>
+  <upgrade version="7" installer="EmaPersonalWiki-v1.5.7-Installer.exe" ask="true">
+    <info>Version 1.5.7 is a minor update that solves the problem that the page did not auto-update
+      after edit on some computers.</info>
+    <file name="EmaPersonalWiki-v1.5.7-Installer.exe"/>
+  </upgrade>
+  <upgrade version="6" installer="EmaPersonalWiki-v1.5.6-Installer.exe" ask="true">
+    <info>Version 1.5 adds drag-and-drop in the edit window to create links to local files and embed
+      images. Fixes some problems with local linking.</info>
+    <file name="EmaPersonalWiki-v1.5.6-Installer.exe"/>
+  </upgrade>
+  <upgrade version="5" installer="EmaPersonalWiki-v1.4-Installer.exe" ask="true">
+    <info>Version 1.5 adds drag-and-drop in the edit window to create links to local files and embed
+      images. Fixes some problems with local linking.</info>
+    <file name="EmaPersonalWiki-v1.4-Installer.exe"/>
+  </upgrade>
+  <upgrade version="4" installer="EmaPersonalWiki-v1.3-Installer.exe" ask="true">
+    <info>The new version remembers the window position between sessions and adds Ctrl+E as a
+      shortcut key to edit a page.</info>
+    <file name="EmaPersonalWiki-v1.3-Installer.exe"/>
+  </upgrade>
+  <upgrade version="3" installer="EmaPersonalWiki-v1.2-Installer.exe" ask="true">
+    <info>This version fixes the "DISP_E_UNKNOWNNAME" error.</info>
+    <file name="EmaPersonalWiki-v1.2-Installer.exe"/>
+  </upgrade>
+  <upgrade version="2" installer="EmaPersonalWiki-v1.1-Installer.exe" ask="true">
+    <info>Version 1.1 has better error recovery possibilities.</info>
+    <file name="EmaPersonalWiki-v1.1-Installer.exe"/>
+  </upgrade>
+</versioninfo>

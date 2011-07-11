@@ -1,0 +1,6 @@
+glob:AndroidClient/bin/
+glob:*.user
+glob:*.suo
+glob:DesktopClient/bin/
+glob:DesktopClient/obj/
+glob:icons/

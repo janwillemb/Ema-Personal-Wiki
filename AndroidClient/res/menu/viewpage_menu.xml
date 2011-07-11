@@ -1,0 +1,20 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+	<item android:title="@string/list_pages" android:id="@+id/list_pages"
+		android:icon="@drawable/stock_copy"></item>
+
+	<item android:icon="@drawable/dropbox" android:title="@string/sync_settings" android:id="@+id/dropbox_login"/>
+
+	<item android:title="@string/help" android:icon="@drawable/help">
+		<menu>
+				<item android:title="@string/help" android:id="@+id/help"
+					android:icon="@drawable/help" />
+				<item android:title="@string/about" android:id="@+id/about"
+					android:icon="@drawable/about" />
+		</menu>
+	</item>
+
+	<item android:title="@string/quit" android:id="@+id/quit"
+		android:icon="@drawable/stock_exit"></item>
+
+</menu>
+

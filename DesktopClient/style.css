@@ -1,0 +1,24 @@
+html {
+  font-family: tahoma;
+  font-size: 10pt;
+}
+body {
+  padding: 5px;
+  padding-bottom: 20px;
+}
+a, a:visited {
+  color: Navy;
+}
+a:hover {
+  color: Blue;
+  text-decoration: underline;
+}
+
+.ema-task-finished {
+  text-decoration: line-through;
+}
+
+.ema-searchresult 
+{
+    margin-bottom: 10px;
+}
