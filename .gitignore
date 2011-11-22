@@ -1,0 +1,8 @@
+
+/.hgtags
+/*/bin/*
+/*/obj/*
+*.exe
+*.user
+*.suo
+Thumbs.db
