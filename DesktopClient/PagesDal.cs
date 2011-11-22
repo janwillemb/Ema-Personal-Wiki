@@ -217,6 +217,27 @@ If you have any questions, don't hesitate to contact the developer at ema@janwil
             return replacement;
         }
 
+        public string RecentChanges()
+        {
+            var sb = new StringBuilder();
+            foreach (var file in App.StorageDirectoryInfo.GetFiles("*" + EXTENSION).OrderByDescending(x => x.LastWriteTimeUtc))
+            {
+                var name = file.Name.Substring(0, file.Name.Length - EXTENSION.Length);
+                if (file.Length > 0)
+                {
+                    sb.AppendFormat(@"
+                        <div class='ema-searchresult'>
+                            <div class='ema-searchresult-link'>
+                                <a href='ema:{0}'>{0}</a> - {1} {2}
+                            </div>
+                        </div>", 
+                        name, file.LastWriteTimeUtc.ToShortDateString() , file.LastWriteTimeUtc.ToShortTimeString());
+                }
+            }
+
+            return getHtml("Recent changes", sb.ToString());
+        }
+
         public string Find(string query)
         {
             var results = new List<SearchResult>();

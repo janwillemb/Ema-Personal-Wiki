@@ -1,12 +1,12 @@
 package com.janwillemboer.ema.dropbox;
 
 import java.io.File;
-import java.util.Date;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.dropbox.client.DropboxAPI.Entry;
+import com.dropbox.client2.DropboxAPI.Entry;
 
 public class SyncFileInfo {
 
@@ -37,59 +37,39 @@ public class SyncFileInfo {
 	}
 
 	private File mLocalFile;
-	private Date mLocalChangeDate;
-	private Date mSyncedWithLocalDate;
-	private final static String SYNCED_WITH_LOCAL_DATE = "syncedWithLocalDate";
+	private long mLocalChangeDate;
+	private long mLocalRevisionSyncedDate;
+	private String mLocalRevision;
+	
+	private final static String LOCAL_REVISION_SYNCED_DATE = "localRevisionSynced";
+	private final static String LOCAL_REVISION = "localRevision";
 
 	private void setLocalFile(File value) {
 		mLocalFile = value;
 		if (value.exists()) {
-			mLocalChangeDate = new Date(mLocalFile.lastModified());
+			mLocalChangeDate = mLocalFile.lastModified();
 
 			if (mSyncInfo != null) {
-				mSyncedWithLocalDate = new Date(
-						mSyncInfo.optLong(SYNCED_WITH_LOCAL_DATE));
+				mLocalRevisionSyncedDate = mSyncInfo.optLong(LOCAL_REVISION_SYNCED_DATE);
+				mLocalRevision = mSyncInfo.optString(LOCAL_REVISION);
 			}
 		}
 	}
 
 	private String mRemotePath;
-	private Date mRemoteChangeDate;
-	private Date mSyncedWithRemoteDate;
-	private final static String SYNCED_WITH_REMOTE_DATE = "syncedWithRemoteDate";
+	private String mRemoteRevision;
 
 	public void setRemoteFile(Entry value) {
 		mRemotePath = value.path;
-
-		mRemoteChangeDate = new Date(Date.parse(value.modified));
-
-		if (mSyncInfo != null) {
-			mSyncedWithRemoteDate = new Date(
-					mSyncInfo.optLong(SYNCED_WITH_REMOTE_DATE));
-		}
-	}
-
-	public void setSyncedWithRemoteDate(Date modified) {
-		mSyncedWithRemoteDate = modified;
-	}
-	public void setSyncedWithRemoteDate(String modified) {
-		mSyncedWithRemoteDate = new Date(Date.parse(modified));
-	}
-	public Date getRemoteChangeDate() {
-		return mRemoteChangeDate;
-	}
-
-	public void setSyncedWithLocalDate(long modified) {
-		mSyncedWithLocalDate = new Date(modified);
+		mRemoteRevision = value.rev;
 	}
 
 	public JSONObject getJSON() {
 		JSONObject json = new JSONObject();
 		try {
 			json.put(JSON_NAME, mName);
-			json.put(SYNCED_WITH_LOCAL_DATE, mSyncedWithLocalDate.getTime());
-			json.put(SYNCED_WITH_REMOTE_DATE,
-					mSyncedWithRemoteDate.getTime());
+			json.put(LOCAL_REVISION, mLocalRevision);
+			json.put(LOCAL_REVISION_SYNCED_DATE, mLocalRevisionSyncedDate);
 		} catch (JSONException e) {
 			throw new RuntimeException(e);
 		}
@@ -115,10 +95,9 @@ public class SyncFileInfo {
 		if (mRemotePath == null || mRemotePath.length() == 0) {
 			return false;
 		}
-		if (mSyncedWithRemoteDate == null) {
-			return true;
-		}
-		return (mRemoteChangeDate.after(mSyncedWithRemoteDate));
+		
+		boolean retval = (!mRemoteRevision.equals(mLocalRevision));
+		return retval;
 	}
 
 	public boolean needsUpload() {
@@ -129,11 +108,28 @@ public class SyncFileInfo {
 			return false;
 		}
 
-		if (mSyncedWithLocalDate == null) {
-			return true;
+		if (!mRemoteRevision.equals(mLocalRevision)) {
+			return false;
 		}
+		
+		boolean retval = (mLocalChangeDate > mLocalRevisionSyncedDate);
+		return retval;
+	}
 
-		return (mLocalChangeDate.after(mSyncedWithLocalDate));
+	public void setLocalVersionTo(String rev) {
+		mLocalRevision = rev;
+	}
+
+	public void updatedLocal() {
+		mLocalFile = new File(mLocalFile.getAbsolutePath());
+		mLocalRevision = mRemoteRevision;
+		mLocalChangeDate = mLocalFile.lastModified();
+		mLocalRevisionSyncedDate = mLocalChangeDate;
+	}
+	
+	public void updatedRemote(Entry e) {
+		setRemoteFile(e);
+		updatedLocal();
 	}
 }
 

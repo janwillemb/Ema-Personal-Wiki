@@ -24,6 +24,19 @@ namespace EmaPersonalWiki
             InitializeComponent();
 
             showStorageDir();
+
+            checkBoxUseHotkey.IsChecked = Settings.Default.UseHotKey;
+
+            Key hotkey;
+            if (Settings.Default.HotKey == 0)
+            {
+                hotkey = Key.Home;
+            }
+            else
+            {
+                hotkey = (Key)Settings.Default.HotKey;
+            }
+            textBoxHotkey.Text = "Window+Alt+" + hotkey.ToString();
         }
 
         private void showStorageDir()
@@ -39,7 +52,7 @@ namespace EmaPersonalWiki
         private void buttonReset_Click(object sender, RoutedEventArgs e)
         {
             var savePath = App.StorageDirectory;
-            
+
             Settings.Default.DropboxDir = string.Empty;
             Settings.Default.Save();
 
@@ -80,6 +93,20 @@ namespace EmaPersonalWiki
         private void button1_Click(object sender, RoutedEventArgs e)
         {
             Close();
+        }
+
+        private void checkBoxUseHotkey_Checked(object sender, RoutedEventArgs e)
+        {
+            Settings.Default.UseHotKey = checkBoxUseHotkey.IsChecked.GetValueOrDefault();
+            Settings.Default.Save();
+        }
+
+        private void textBoxHotkey_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            textBoxHotkey.Text = "Windows+Alt+" + e.Key.ToString();
+            Settings.Default.HotKey = (int)e.Key;
+            Settings.Default.Save();
+            e.Handled = true;
         }
     }
 }

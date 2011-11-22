@@ -68,41 +68,37 @@ containing a value of this type.
         public static final int sync=0x7f02000b;
     }
     public static final class id {
-        public static final int about=0x7f060021;
-        public static final int after_edit=0x7f06000a;
-        public static final int button_add=0x7f060015;
-        public static final int button_back=0x7f060016;
-        public static final int button_edit=0x7f060018;
-        public static final int button_home=0x7f060017;
-        public static final int button_sync=0x7f060019;
-        public static final int cancel=0x7f060012;
-        public static final int confirm=0x7f060011;
-        public static final int delete=0x7f06001d;
-        public static final int dropbox_login=0x7f06001f;
-        public static final int empty=0x7f060014;
-        public static final int help=0x7f060020;
-        public static final int list_pages=0x7f06001e;
-        public static final int listview=0x7f060013;
-        public static final int login_email=0x7f060005;
-        public static final int login_email_prompt=0x7f060004;
-        public static final int login_password=0x7f060007;
-        public static final int login_password_prompt=0x7f060006;
-        public static final int login_submit=0x7f060008;
-        public static final int minutes_spinner=0x7f06000c;
-        public static final int open=0x7f06001c;
-        public static final int page_body=0x7f06000e;
-        public static final int page_title=0x7f06000d;
-        public static final int periodically=0x7f06000b;
-        public static final int quit=0x7f060022;
-        public static final int save=0x7f06000f;
-        public static final int text1=0x7f060010;
+        public static final int about=0x7f06001d;
+        public static final int after_edit=0x7f060006;
+        public static final int button_add=0x7f060011;
+        public static final int button_back=0x7f060012;
+        public static final int button_edit=0x7f060014;
+        public static final int button_home=0x7f060013;
+        public static final int button_sync=0x7f060015;
+        public static final int cancel=0x7f06000e;
+        public static final int confirm=0x7f06000d;
+        public static final int delete=0x7f060019;
+        public static final int dropbox_login=0x7f06001b;
+        public static final int empty=0x7f060010;
+        public static final int help=0x7f06001c;
+        public static final int list_pages=0x7f06001a;
+        public static final int listview=0x7f06000f;
+        public static final int login_submit=0x7f060004;
+        public static final int minutes_spinner=0x7f060008;
+        public static final int open=0x7f060018;
+        public static final int page_body=0x7f06000a;
+        public static final int page_title=0x7f060009;
+        public static final int periodically=0x7f060007;
+        public static final int quit=0x7f06001e;
+        public static final int save=0x7f06000b;
+        public static final int text1=0x7f06000c;
         public static final int title=0x7f060001;
         public static final int title_message=0x7f060002;
         public static final int title_progressbar=0x7f060003;
         public static final int titlebar_layout=0x7f060000;
-        public static final int webview0=0x7f06001a;
-        public static final int webview1=0x7f06001b;
-        public static final int when_starting_app=0x7f060009;
+        public static final int webview0=0x7f060016;
+        public static final int webview1=0x7f060017;
+        public static final int when_starting_app=0x7f060005;
     }
     public static final class layout {
         public static final int custom_titlebar=0x7f030000;
@@ -164,6 +160,8 @@ containing a value of this type.
         public static final int sync_when_starting_app=0x7f040027;
         public static final int synchronizing=0x7f04002b;
         public static final int unknownMimetype=0x7f04002d;
+        public static final int v2_update_text=0x7f04002f;
+        public static final int v2_update_title=0x7f04002e;
     }
     public static final class styleable {
         /** Attributes that can be used with a com_admob_android_ads_AdView.

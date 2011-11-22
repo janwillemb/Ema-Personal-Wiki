@@ -16,8 +16,9 @@
                 <MenuItem Header="_Close" Click="MenuItemClose_Click" InputGestureText="Alt+F4"/>
             </MenuItem>
             <MenuItem Header="_Wiki">
-                <MenuItem Header="_Back" Command="{Binding BackCommand}"/>
+                <MenuItem Header="_Back" Command="{Binding BackCommand}" InputGestureText="Backspace"/>
                 <MenuItem Header="_Home" Command="{Binding HomeCommand}"/>
+                <MenuItem Header="_Recent modifications" Command="{Binding RecentCommand}" InputGestureText="Ctrl+R"/>
                 <Separator/>
                 <MenuItem Header="_Edit page" Command="{Binding EditCommand}" InputGestureText="Ctrl+E"/>
                 <Separator/>
@@ -58,8 +59,8 @@
             </StackPanel>
         </Button>
         <TextBox TabIndex="4" Height="32" HorizontalAlignment="Right" Margin="0,5,43,0" Name="textBoxSearch"  Grid.Row="1"
-                 VerticalAlignment="Top" Width="155" Text="search wiki" FontSize="12" FontStyle="Italic" 
+                 VerticalAlignment="Top" Width="204" Text="search wiki or goto &gt;Pagename" FontSize="12" FontStyle="Italic" 
                  Foreground="#52000000" FontFamily="Trebuchet MS" Padding="5,7,0,0" GotFocus="textBoxSearch_GotFocus"
-                 LostFocus="textBoxSearch_LostFocus" />
+                 LostFocus="textBoxSearch_LostFocus" ToolTip="Type a search query to search or >Pagename to go directly to a page. Control+/ sets focus to the search box." />
     </Grid>
 </Window>

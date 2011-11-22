@@ -62,7 +62,7 @@
 	<string name="delete">Delete</string>
 	<string name="do_dropbox_login">Log in</string>
 	<string name="do_dropbox_logout">Forget credentials</string>
-	<string name="dropbox_explanation">Dropbox login data</string>
+	<string name="dropbox_explanation">Connection with Dropbox</string>
 	<string name="dropbox_login">User</string>
 	<string name="dropbox_password">Password</string>
 	<string name="edit">Edit</string>
@@ -100,4 +100,6 @@
 	<string name="synchronizing">Syncing</string>
 	<string name="syncError">There was a synchronization error.</string>
 	<string name="unknownMimetype">Could not find the app to view this file.</string>
+	<string name="v2_update_title">Ema update</string>
+	<string name="v2_update_text">EMA now uses the new Dropbox API.\n\All files must be downloaded from Dropbox; local changes will be lost. A backup of all files has been made to the SD card in the directory PersonalWiki-backup-v2.</string>
 </resources>

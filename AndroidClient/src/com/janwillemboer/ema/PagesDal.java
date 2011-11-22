@@ -8,6 +8,9 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.regex.Matcher;
 
+import org.apache.commons.io.FileUtils;
+
+import android.app.AlertDialog;
 import android.content.Context;
 import android.os.Environment;
 
@@ -27,11 +30,15 @@ public class PagesDal {
 
 		mFilesDir = new File(Environment.getExternalStorageDirectory(),
 				"PersonalWiki"); // mCtx.getExternalFilesDir(null);
+		
+		boolean isNewInstallation = !mFilesDir.exists();
 		mFilesDir.mkdir();
 		if (!mFilesDir.exists()) {
 			throw new IOException(mCtx.getText(
 					R.string.storage_dir_creation_failed).toString());
 		}
+
+		createBackup("2", isNewInstallation);
 
 		createAndReadCss();
 
@@ -39,6 +46,33 @@ public class PagesDal {
 		WikiPage.defaultPageDefaultContent = ctx.getText(
 				R.string.default_page_text).toString();
 		WikiPage.aboutPageContent = ctx.getText(R.string.about_text).toString();
+	}
+
+	private void createBackup(String version, boolean isNewInstallation) throws IOException {
+		File signalFile = new File(mFilesDir, "v" + version + ".flg");
+		if (signalFile.exists()) {
+			return;
+		}
+
+		if (isNewInstallation) {
+			return;
+		}
+		
+		File newDir = new File(mFilesDir.getAbsolutePath() + "-backup-v"
+				+ version);
+		if (newDir.exists()) {
+			return;
+		}
+
+		newDir.mkdir();
+
+		FileUtils.copyDirectory(mFilesDir, newDir);
+		signalFile.createNewFile();
+		
+		AlertDialog ad = new AlertDialog.Builder(mCtx).create();
+		ad.setTitle(R.string.v2_update_title);
+		ad.setMessage(mCtx.getText(R.string.v2_update_text));
+		ad.show();
 	}
 
 	public File Dir() {
@@ -72,14 +106,14 @@ public class PagesDal {
 	public Collection<WikiPage> fetchAll() {
 		File[] files = mFilesDir.listFiles(new FilenameFilter() {
 			public boolean accept(File dir, String filename) {
-				
+
 				if (filename.toLowerCase().endsWith(WikiPage.EXT)) {
-					File f = new File(dir, filename); 
+					File f = new File(dir, filename);
 					if (f.length() > 0) {
 						return true;
 					}
 				}
-				
+
 				return false;
 			}
 		});

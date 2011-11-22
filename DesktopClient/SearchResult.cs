@@ -32,26 +32,45 @@ namespace EmaPersonalWiki
                 return;
             }
 
-            var queryPos = textToSearch.IndexOf(query);
-            if (queryPos > -1)
+            if (pageName.ToLower().IndexOf(query) > -1)
             {
                 Relevance = 1.0;
-
-                createSnippet(query, queryPos);
+                createSnippet(0);
             }
             else
             {
-                var relevancePart = 0.8 / queryWords.Count();
-                foreach (var word in queryWords) 
+                var queryPos = textToSearch.IndexOf(query);
+                if (queryPos > -1)
                 {
-                    var pos = textToSearch.IndexOf(word);
-                    if (pos > -1)
-                    {
-                        Relevance += relevancePart;
+                    Relevance = 0.9;
 
-                        if (string.IsNullOrEmpty(Snippet))
+                    createSnippet(queryPos);
+                }
+                else
+                {
+                    var relevancePart = 0.8 / queryWords.Count();
+                    foreach (var word in queryWords)
+                    {
+                        if (pageName.ToLower().IndexOf(word) > -1)
                         {
-                            createSnippet(word, pos);
+                            Relevance += relevancePart;
+                            if (string.IsNullOrEmpty(Snippet))
+                            {
+                                createSnippet(0);
+                            }
+                        }
+                        else
+                        {
+                            var pos = textToSearch.IndexOf(word);
+                            if (pos > -1)
+                            {
+                                Relevance += relevancePart;
+
+                                if (string.IsNullOrEmpty(Snippet))
+                                {
+                                    createSnippet(pos);
+                                }
+                            }
                         }
                     }
                 }
@@ -79,7 +98,7 @@ namespace EmaPersonalWiki
                 select s;
         }
 
-        private void createSnippet(string highlight, int foundAtPos)
+        private void createSnippet(int foundAtPos)
         {
             int snippetStart = Math.Max(0, foundAtPos - 50);
             int snippetStop = Math.Min(mText.Length, snippetStart + 100);

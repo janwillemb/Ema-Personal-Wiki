@@ -10,6 +10,8 @@ using System.Windows.Media;
 using System.Diagnostics;
 using System.Web;
 using System.Windows.Input;
+using System.Windows.Interop;
+using System.Windows.Forms;
 
 namespace EmaPersonalWiki
 {
@@ -45,6 +47,7 @@ namespace EmaPersonalWiki
             var jsinterop = new JavascriptInterop();
             webBrowser1.ObjectForScripting = jsinterop;
             jsinterop.InvokeFromJavascript += jsinterop_InvokeFromJavascript;
+            webBrowser1.PreviewKeyDown += webBrowser1_KeyDown;
 
             mSearchWatermarkText = textBoxSearch.Text;
             mSearchWatermarkBrush = textBoxSearch.Foreground;
@@ -55,16 +58,74 @@ namespace EmaPersonalWiki
             EditCommand = new RelayCommand(() => buttonEdit_Click(null, null));
             InputBindings.Add(new KeyBinding(EditCommand, new KeyGesture(Key.E, ModifierKeys.Control)));
             BackCommand = new RelayCommand(() => buttonBack_Click(null, null));
-            InputBindings.Add(new KeyBinding(BackCommand, new KeyGesture(Key.Left, ModifierKeys.Alt)));
             HomeCommand = new RelayCommand(() => buttonHome_Click(null, null));
             InputBindings.Add(new KeyBinding(HomeCommand, new KeyGesture(Key.Home, ModifierKeys.Alt)));
             FindCommand = new RelayCommand(() => textBoxSearch.Focus());
+            InputBindings.Add(new KeyBinding(FindCommand, new KeyGesture(Key.OemQuestion, ModifierKeys.Control)));
+            RecentCommand = new RelayCommand(() => recentModifications());
+            InputBindings.Add(new KeyBinding(RecentCommand, new KeyGesture(Key.R, ModifierKeys.Control)));
 
             initWatcher();
 
             refresh();
 
             restorePosition();
+
+            Loaded += (sender, e) => registerHotkey();
+            Unloaded += (sender, e) => unregisterHotkey();
+        }
+
+        private HotKey _hk;
+        private void registerHotkey()
+        {
+            try
+            {
+                unregisterHotkey();
+
+                if (Settings.Default.UseHotKey)
+                {
+                    Keys hotkey;
+                    if (Settings.Default.HotKey == 0)
+                    {
+                        hotkey = Keys.Home;
+                    }
+                    else
+                    {
+                        hotkey = (Keys)KeyInterop.VirtualKeyFromKey((Key)Settings.Default.HotKey);
+                    }
+
+                    _hk = new HotKey(ModifierKeys.Windows | ModifierKeys.Alt, hotkey, this);
+                    _hk.HotKeyPressed += k =>
+                    {
+                        this.Activate();
+                    };
+                }
+            }
+            catch (Exception)
+            {
+            }
+        }
+        private void unregisterHotkey()
+        {
+            try
+            {
+                if (_hk != null)
+                {
+                    _hk.Dispose();
+                    _hk = null;
+                }
+            }
+            catch (Exception)
+            {
+            }
+        }
+
+        private void webBrowser1_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            if (e.Key == Key.Back)
+            {
+                buttonBack_Click(null, null);
+            }
         }
 
         private bool mHasFocus = true; // a safe assumption to begin with
@@ -329,12 +390,33 @@ namespace EmaPersonalWiki
             editWin.ShowDialog();
         }
 
+        public ICommand RecentCommand { get; set; }
+        private void recentModifications()
+        {
+            setCurrentPageWithHistory(HistoryItem.CreateVirtual("Recent changes", mDal.RecentChanges()));
+            refresh();
+        }
+
+        private static readonly Regex _gotoPageRegex = new Regex(@"\>\s*(?<page>.+)");
+
         public ICommand FindCommand { get; set; }
         private void buttonFind_Click(object sender, RoutedEventArgs e)
         {
             var query = textBoxSearch.Text;
+
             if (!string.IsNullOrEmpty(query) && query != mSearchWatermarkText)
             {
+                var m = _gotoPageRegex.Match(query);
+                if (m.Success)
+                {
+                    //directly go to a page
+                    string pageName = m.Groups["page"].Value;
+                    setCurrentPageWithHistory(pageName);
+                    refresh();
+                    return;
+                }
+
+                //do a normal seacrh
                 var findResultsHtml = mDal.Find(query);
 
                 setCurrentPageWithHistory(HistoryItem.CreateVirtual("Search results", findResultsHtml));
@@ -350,6 +432,10 @@ namespace EmaPersonalWiki
                 textBoxSearch.Foreground = Brushes.Black;
                 textBoxSearch.Text = string.Empty;
                 textBoxSearch.FontStyle = FontStyles.Normal;
+            }
+            else
+            {
+                textBoxSearch.SelectAll();
             }
         }
 
@@ -382,6 +468,9 @@ namespace EmaPersonalWiki
         {
             new SettingsWindow().ShowDialog();
 
+            //hotkey may have been changed
+            registerHotkey();
+
             //user may have changed the storage dir by now.
             if (!mWatcher.Path.Equals(App.StorageDirectory))
             {
@@ -391,11 +480,12 @@ namespace EmaPersonalWiki
 
         private void MenuItemDelete_Click(object sender, RoutedEventArgs e)
         {
-            if (MessageBox.Show("You're about to delete page " + mCurrentPage.PageName +
+            if (System.Windows.MessageBox.Show("You're about to delete page " + mCurrentPage.PageName +
                 ". You can undo this if changes are synchronized with Dropbox.", "Ema Personal Wiki states", MessageBoxButton.OKCancel) == MessageBoxResult.OK)
             {
                 mDal.SavePage(mCurrentPage.PageName, string.Empty);
             }
         }
+
     }
 }

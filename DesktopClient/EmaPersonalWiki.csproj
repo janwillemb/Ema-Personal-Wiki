@@ -91,6 +91,8 @@
       <DependentUpon>EditPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="HistoryItem.cs" />
+    <Compile Include="HotKey.cs" />
+    <Compile Include="HotKeyWinApi.cs" />
     <Compile Include="JavascriptInterop.cs" />
     <Compile Include="PagesDal.cs" />
     <Compile Include="RelayCommand.cs" />

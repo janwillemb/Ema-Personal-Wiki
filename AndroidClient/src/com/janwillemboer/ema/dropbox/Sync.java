@@ -3,16 +3,12 @@ package com.janwillemboer.ema.dropbox;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -20,29 +16,24 @@ import org.json.JSONObject;
 import android.os.Handler;
 import android.os.Message;
 
-import com.dropbox.client.DropboxAPI;
-import com.dropbox.client.DropboxAPI.Entry;
-import com.dropbox.client.DropboxClient;
-import com.dropbox.client.DropboxException;
+import com.dropbox.client2.DropboxAPI.Entry;
+import com.dropbox.client2.exception.DropboxException;
 import com.janwillemboer.ema.EmaActivityHelper;
 import com.janwillemboer.ema.R;
 import com.janwillemboer.ema.WikiPage;
 
 public class Sync {
 
-	private final static String METADATA_FILE = "sync-metadata.json";
-
-	private DropboxAPI mApi;
-	private DropboxClient mClient;
+	private final static String METADATA_FILE = "sync-metadata-v2.json";
 
 	private EmaActivityHelper mHelper;
 	private File mLocalDir;
 	private Handler mProgressUpdateHandler;
+	private DropboxWrapper mApi;
 	private JSONObject mSyncMetadata;
 
-	public Sync(EmaActivityHelper helper, DropboxAPI api, DropboxClient client) {
+	public Sync(EmaActivityHelper helper, DropboxWrapper api) {
 		mApi = api;
-		mClient = client;
 		mHelper = helper;
 
 		mLocalDir = mHelper.getDal().Dir();
@@ -78,13 +69,8 @@ public class Sync {
 		mProgressUpdateHandler = progressUpdate;
 	}
 
-	public boolean perform() throws IOException {
-		Entry syncDir = mApi.metadata("dropbox", "/PersonalWiki", 1000, null,
-				true);
-
-		if (!syncDir.is_dir) {
-			syncDir = mApi.createFolder("dropbox", "/PersonalWiki");
-		}
+	public boolean perform() throws IOException, DropboxException {
+		Entry syncDir = mApi.getOrCreateFolder("/PersonalWiki");
 
 		showProgress(1, 0);
 
@@ -95,15 +81,21 @@ public class Sync {
 					mLocalDir);
 			files.put(fi.getName(), fi);
 		}
-		// add info for remote files
-		for (Entry f : syncDir.contents) {
-			if (!f.is_dir) {
+
+		if (syncDir.contents != null) {
+			// add info for remote files
+			for (Entry f : syncDir.contents) {
+				if (f.isDir) {
+					// skip dirs
+					continue;
+				}
+
 				SyncFileInfo fi;
 				if (files.containsKey(f.fileName())) {
 					fi = files.get(f.fileName());
 				} else {
-					fi = new SyncFileInfo(new File(mLocalDir, f.fileName()),
-							mSyncMetadata, mLocalDir);
+					File newFile = new File(mLocalDir, f.fileName());
+					fi = new SyncFileInfo(newFile, mSyncMetadata, mLocalDir);
 					files.put(fi.getName(), fi);
 				}
 				fi.setRemoteFile(f);
@@ -120,50 +112,21 @@ public class Sync {
 			showProgress(totalFiles, count);
 
 			if (fi.needsUpload()) {
-				mApi.putFile("dropbox", syncDir.path, fi.getFile());
+
+				Entry syncedFile = mApi.putFile(syncDir.path, fi.getFile());
 
 				// update local sync info
-				Entry syncedFile = mApi.metadata("dropbox", syncDir.path + "/"
-						+ fi.getName(), 1000, null, true);
-				fi.setSyncedWithRemoteDate(syncedFile.modified);
-				fi.setSyncedWithLocalDate(fi.getFile().lastModified());
+				fi.updatedRemote(syncedFile);
 				syncedSomething = true;
 
 			} else if (fi.needsDownload()) {
-				
-				OutputStream os = null;
-				HttpEntity entity = null;
-				try {
-					//FileDownload fd = mApi.getFileStream("dropbox",
-					//		fi.getRemotePath(), null);
-					
-					HttpResponse response = null;
-					try {
-						response = mClient.getFile("dropbox",
-								fi.getRemotePath());
-					} catch (DropboxException e) {
-						throw new IOException(e.getLocalizedMessage());
-					}
-					entity = response.getEntity();
-					os = new FileOutputStream(fi.getFile());
-					entity.writeTo(os);
 
-					// update local sync info
-					File updatedFile = new File(fi.getFile().getAbsolutePath());
-					fi.setSyncedWithLocalDate(updatedFile.lastModified());
-					fi.setSyncedWithRemoteDate(fi.getRemoteChangeDate());
-					syncedSomething = true;
-				} finally {
-					try {
-						if (os != null) {
-							os.close();
-						}
-						if (entity != null) {
-							entity.consumeContent(); // closes connections
-						}
-					} catch (IOException e) {
-					}
-				}
+				mApi.getFile(syncDir.path, fi.getFile());
+
+				fi.updatedLocal();
+
+				syncedSomething = true;
+
 			}
 		}
 

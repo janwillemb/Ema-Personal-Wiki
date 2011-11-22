@@ -1,36 +1,7 @@
-/*
- * Copyright (c) 2010 Evenflow, Inc.
- * 
- * Permission is hereby granted, free of charge, to any person
- * obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without
- * restriction, including without limitation the rights to use,
- * copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following
- * conditions:
- * 
- * The above copyright notice and this permission notice shall be
- * included in all copies or substantial portions of the Software.
- * 
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
- * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
- * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
- * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
- * OTHER DEALINGS IN THE SOFTWARE.
- * 
- * I modified the POOPY CRAPPY code to be better.
- */
-
 package com.janwillemboer.ema.dropbox;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.AdapterView;
@@ -38,7 +9,6 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
-import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
 
@@ -50,8 +20,6 @@ public class EditSyncPreferences extends Activity {
 	private DropboxAuthentication mDropboxAuth;
 	private EmaActivityHelper mHelper;
 	private boolean mLoggedIn;
-	private EditText mLoginEmail;
-	private EditText mLoginPassword;
 	private SyncPrefs mPreferences;
 	private Button mSubmit;
 
@@ -64,8 +32,6 @@ public class EditSyncPreferences extends Activity {
 		mHelper = new EmaActivityHelper(this);
 		mPreferences = new SyncPrefs(this);
 
-		mLoginEmail = mHelper.find(R.id.login_email);
-		mLoginPassword = mHelper.find(R.id.login_password);
 		mSubmit = mHelper.find(R.id.login_submit);
 
 		initializeBooleans();
@@ -110,9 +76,9 @@ public class EditSyncPreferences extends Activity {
 		mSubmit.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
 				if (mLoggedIn) {
-					// We're going to log out
-					mDropboxAuth.logout();
+					//logout
 					setLoggedIn(false);
+					mDropboxAuth.logout();
 				} else {
 					// Try to log in
 					doLogin();
@@ -120,13 +86,7 @@ public class EditSyncPreferences extends Activity {
 			}
 		});
 
-		DropboxAuthentication.LoginResult loginResult = mDropboxAuth
-				.checkLoginToken();
-		if (loginResult.getSucceeded()) {
-			setLoggedIn(true);
-		} else {
-			setLoggedIn(false);
-		}
+		setLoggedIn(mDropboxAuth.getIsAuthenticated());
 	}
 
 	private void initializeSpinner() {
@@ -161,51 +121,18 @@ public class EditSyncPreferences extends Activity {
 	}
 
 	private void doLogin() {
-		final Handler resultHandler = new Handler() {
-			@Override
-			public void handleMessage(Message msg) {
-				DropboxAuthentication.LoginResult result = (DropboxAuthentication.LoginResult) msg.obj;
-				setLoggedIn(result.getSucceeded());
-				if (result.getSucceeded()) {
-					mHelper.showToast(R.string.login_success);
-					finish();
-				} else {
-					mHelper.showToast(result.getErrorMessage());
-				}
+		mDropboxAuth.startAuthentication();
+	}
 
-			}
-		};
+	protected void onResume() {
+		super.onResume();
 
-		Thread t = new Thread(new Runnable() {
-			public void run() {
-				String email = mLoginEmail.getText().toString();
-				if (email.length() < 5 || email.indexOf("@") < 0
-						|| email.indexOf(".") < 0) {
-					mHelper.showToast(R.string.enter_valid_email);
-					return;
-				}
-
-				String password = mLoginPassword.getText().toString();
-				if (password.length() == 0) {
-					mHelper.showToast(R.string.enter_password);
-					return;
-				}
-
-				DropboxAuthentication.LoginResult result = mDropboxAuth.login(
-						email, password);
-
-				Message msg = new Message();
-				msg.obj = result;
-				resultHandler.sendMessage(msg);
-			}
-		});
-		t.start();
+		mDropboxAuth.authenticationFinished();
+		setLoggedIn(mDropboxAuth.getIsAuthenticated());
 	}
 
 	public void setLoggedIn(boolean loggedIn) {
 		mLoggedIn = loggedIn;
-		mLoginEmail.setEnabled(!loggedIn);
-		mLoginPassword.setEnabled(!loggedIn);
 		if (loggedIn) {
 			mSubmit.setText(getText(R.string.do_dropbox_logout));
 		} else {

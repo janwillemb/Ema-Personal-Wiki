@@ -53,6 +53,7 @@ public class ViewPage extends Activity {
 	private boolean mSyncRequestedByUser = false;
 	private Handler mRefreshHandler;
 	private Lock mRefreshLock = new ReentrantLock();
+	private DropboxAuthentication mDropboxAuthentication;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -83,32 +84,38 @@ public class ViewPage extends Activity {
 
 	private void initializeButtons() {
 
-		Button backButton = mHelper.find(R.id.button_back);
-		backButton.setOnClickListener(new View.OnClickListener() {
+		setClickListenerOn(R.id.button_back, new View.OnClickListener() {
 			public void onClick(View v) {
 				onBackPressed();
 			}
 		});
 
-		Button editButton = mHelper.find(R.id.button_edit);
-		editButton.setOnClickListener(new View.OnClickListener() {
+		setClickListenerOn(R.id.button_edit, new View.OnClickListener() {
 			public void onClick(View v) {
 				editPage();
 			}
 		});
-		Button homeButton = mHelper.find(R.id.button_home);
-		homeButton.setOnClickListener(new View.OnClickListener() {
+
+		setClickListenerOn(R.id.button_home, new View.OnClickListener() {
 			public void onClick(View v) {
 				loadUrlWithHistory(WikiPage.DEFAULT_PAGE);
 			}
 		});
-		Button syncButton = mHelper.find(R.id.button_sync);
-		syncButton.setOnClickListener(new View.OnClickListener() {
+
+		setClickListenerOn(R.id.button_sync, new View.OnClickListener() {
 			public void onClick(View v) {
 				mSyncRequestedByUser = true;
 				mNotABadTimeForASync = true;
 			}
 		});
+	}
+
+	private void setClickListenerOn(int buttonId, View.OnClickListener listener) {
+		Button b = mHelper.find(buttonId);
+		if (b == null)
+			return;
+
+		b.setOnClickListener(listener);
 	}
 
 	private void setTitleCustom(String titleText) {
@@ -259,7 +266,6 @@ public class ViewPage extends Activity {
 		}
 
 		// start a synchronization thread
-		final DropboxAuthentication auth = new DropboxAuthentication(this);
 		Thread t = new Thread(new Runnable() {
 			public void run() {
 				while (true) {
@@ -280,7 +286,12 @@ public class ViewPage extends Activity {
 							}
 						}
 
-						if (!auth.checkLoginToken().getSucceeded()) {
+						if (mDropboxAuthentication == null) {
+							mDropboxAuthentication = new DropboxAuthentication(
+									ViewPage.this);
+						}
+
+						if (!mDropboxAuthentication.getIsAuthenticated()) {
 							if (mSyncRequestedByUser) {
 								mSyncRequestedByUser = false;
 								mHelper.showToast(getText(R.string.provide_credentials));
@@ -289,8 +300,8 @@ public class ViewPage extends Activity {
 						}
 						mSyncRequestedByUser = false;
 
-						Sync sync = new Sync(mHelper, auth.getDropboxApi(),
-								auth.getDropboxClient());
+						Sync sync = new Sync(mHelper, mDropboxAuthentication
+								.getAPI());
 						sync.setStatusHandler(syncProgressHandler);
 						if (sync.perform()) {
 							// -there was a change-
@@ -521,7 +532,17 @@ public class ViewPage extends Activity {
 				loadUrlWithHistory(intent.getStringExtra(TITLE_KEY));
 				return;
 			}
+			break;
+
+		case LOGIN:
+			if (mDropboxAuthentication != null) {
+				mDropboxAuthentication.reInitialize();
+			}
+			mNotABadTimeForASync = true;
+			break;
+
 		}
+
 		super.onActivityResult(requestCode, resultCode, intent);
 
 	}
