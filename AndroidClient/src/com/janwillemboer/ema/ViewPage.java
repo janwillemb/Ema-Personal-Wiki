@@ -11,7 +11,6 @@ import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.net.Uri;
-import android.net.UrlQuerySanitizer;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -553,7 +552,10 @@ public class ViewPage extends Activity {
 
 		Matcher m = wikiLinkPattern.matcher(url);
 		if (m.matches()) {
-			String page = new UrlQuerySanitizer().unescape(m.group(1));
+			// UrlQuerySanitizer().unescape() works incorrect 
+			// see http://code.google.com/p/android/issues/detail?id=14437 for details
+//			String page = new UrlQuerySanitizer().unescape(m.group(1));
+			String page = android.net.Uri.decode(m.group(1));
 
 			loadUrlWithHistory(page);
 			return true;
