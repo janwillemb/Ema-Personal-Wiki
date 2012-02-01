@@ -6,7 +6,7 @@
 
 ; HM NIS Edit Wizard helper defines
 !define PRODUCT_NAME "Ema Personal Wiki"
-!define PRODUCT_VERSION "1.7.12"
+!define PRODUCT_VERSION "1.7.13"
 !define PRODUCT_PUBLISHER "Jan Willem Boer"
 !define PRODUCT_WEB_SITE "http://www.janwillemboer.nl/blog/ema-personal-wiki"
 !define PRODUCT_DIR_REGKEY "Software\Microsoft\Windows\CurrentVersion\App Paths\EmaPersonalWiki.exe"
@@ -24,7 +24,7 @@
 ; Welcome page
 !insertmacro MUI_PAGE_WELCOME
 ; License page
-!insertmacro MUI_PAGE_LICENSE "D:\projecten\Ema-Personal-Wiki.git\Installer\eula.txt"
+!insertmacro MUI_PAGE_LICENSE "D:\projecten\Ema-Personal-Wiki\Installer\eula.txt"
 ; Directory page
 !insertmacro MUI_PAGE_DIRECTORY
 ; Instfiles page
@@ -42,7 +42,7 @@
 ; MUI end ------
 
 Name "${PRODUCT_NAME}"
-Icon "D:\projecten\Ema-Personal-Wiki.git\DesktopClient\icons\icon.ico"
+Icon "D:\projecten\Ema-Personal-Wiki\DesktopClient\icons\icon.ico"
 OutFile "EmaPersonalWiki-v${PRODUCT_VERSION}-Installer.exe"
 InstallDir "$PROGRAMFILES\EmaPersonalWiki"
 InstallDirRegKey HKLM "${PRODUCT_DIR_REGKEY}" ""
@@ -100,13 +100,13 @@ Section "Program files" SEC01
   ${EndIf}
   
   
-  File "D:\projecten\Ema-Personal-Wiki.git\DesktopClient\bin\Release\EmaPersonalWiki.exe"
+  File "D:\projecten\Ema-Personal-Wiki\DesktopClient\bin\Release\EmaPersonalWiki.exe"
   CreateShortCut "$SMPROGRAMS\Ema Personal Wiki.lnk" "$INSTDIR\EmaPersonalWiki.exe"
   CreateShortCut "$DESKTOP\Ema Personal Wiki.lnk" "$INSTDIR\EmaPersonalWiki.exe"
-  File "D:\projecten\Ema-Personal-Wiki.git\DesktopClient\bin\Release\EmaPersonalWiki.exe.config"
-  File "D:\projecten\Ema-Personal-Wiki.git\DesktopClient\bin\Release\MarkdownSharp.dll"
-  File "D:\projecten\Ema-Personal-Wiki.git\DesktopClient\bin\Release\style.css"
-  File "D:\projecten\Ema-Personal-Wiki.git\DesktopClient\bin\Release\System.Data.SQLite.DLL"
+  File "D:\projecten\Ema-Personal-Wiki\DesktopClient\bin\Release\EmaPersonalWiki.exe.config"
+  File "D:\projecten\Ema-Personal-Wiki\DesktopClient\bin\Release\MarkdownSharp.dll"
+  File "D:\projecten\Ema-Personal-Wiki\DesktopClient\bin\Release\style.css"
+  File "D:\projecten\Ema-Personal-Wiki\DesktopClient\bin\Release\System.Data.SQLite.DLL"
 SectionEnd
 
 Section -Post

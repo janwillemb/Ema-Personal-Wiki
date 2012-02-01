@@ -1,5 +1,11 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <versioninfo>
+  <upgrade version="13" installer="EmaPersonalWiki-v1.7.13-Installer.exe" ask="true">
+    <info>Version 1.7.13 fixes that Ema Personal Wiki had to run as administrator to work. It can now run as normal user.
+	This also fixes the drag-and-drop issue, because running as administrator activates a mechanism that doesn't allow you 
+	to drag files from Windows Explorer to an "elevated" app.</info>
+    <file name="EmaPersonalWiki-v1.7.13-Installer.exe"/>
+  </upgrade>
   <upgrade version="12" installer="EmaPersonalWiki-v1.7.12-Installer.exe" ask="true">
     <info>Version 1.7.12 adds:
   - global hotkey support (see settings); 

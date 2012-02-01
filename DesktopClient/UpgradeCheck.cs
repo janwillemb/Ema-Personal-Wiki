@@ -54,7 +54,7 @@ namespace EmaPersonalWiki
             }
         }
 
-        private const int CURRENT_VERSION = 12; 
+        private const int CURRENT_VERSION = 13; 
 
         public void Start()
         {

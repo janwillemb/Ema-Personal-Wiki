@@ -17,7 +17,23 @@ namespace EmaPersonalWiki
     /// </summary>
     public partial class App : Application
     {
-        public static string StorageDirectory;
+        private static string _storageDirectory = null;
+        public static string Command;
+        private static UpgradeCheck mUpgradeCheck;
+        private static readonly Regex _commandRegex = new Regex(@"^(?:ema:(?://)?)?(.+)");
+
+        public static string StorageDirectory
+        {
+            get
+            {
+                if (_storageDirectory == null)
+                {
+                    InitializeStorageDir(true, true);
+                }
+                return _storageDirectory;
+            }
+        }
+
         public static DirectoryInfo StorageDirectoryInfo
         {
             get
@@ -26,29 +42,11 @@ namespace EmaPersonalWiki
             }
         }
 
-        public static string Command;
-
-        private UpgradeCheck mUpgradeCheck;
 
         public App()
         {
-            log("handle exceptions");
-
             this.DispatcherUnhandledException += App_DispatcherUnhandledException;
-
-            log("get storage dir");
-
-            GetStorageDir(true, true);
-
-            log("upgradecheck");
-
-            mUpgradeCheck = new UpgradeCheck();
-            mUpgradeCheck.Start();
-
-            log("continue...");
         }
-
-        private static readonly Regex _commandRegex = new Regex(@"^(?:ema:(?://)?)?(.+)");
 
         private static void closeSplash(SplashScreen splash)
         {
@@ -75,14 +73,21 @@ namespace EmaPersonalWiki
 
         private static void log(string lines)
         {
-            string log = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ema.log");
-            File.AppendAllText(log, DateTime.Now + ": " + lines + "\n\n");
+            try
+            {
+                string log = Path.Combine(Environment.ExpandEnvironmentVariables("%TEMP%"), "ema.log");
+                File.AppendAllText(log, DateTime.Now + ": " + lines + "\n\n");
+            }
+            catch (Exception)
+            {
+                //that's unfortunate, but not fatal
+            }
+
         }
 
         [STAThread, DebuggerNonUserCode]
         public static void Main(string[] args)
         {
-            log("show splashscreen");
             SplashScreen splash = null;
             try
             {
@@ -96,14 +101,14 @@ namespace EmaPersonalWiki
                 //whatever
             }
 
-            log("init app");
             App app = new App();
             app.InitializeComponent();
 
-            log("close splash");
+            mUpgradeCheck = new UpgradeCheck();
+            mUpgradeCheck.Start();
+
             closeSplash(splash);
 
-            log("parse commandline");
             if (args.Length > 0)
             {
                 var m = _commandRegex.Match(args[0]);
@@ -113,7 +118,6 @@ namespace EmaPersonalWiki
                 }
             }
 
-            log("start app");
             app.Run();
         }
 
@@ -126,7 +130,7 @@ namespace EmaPersonalWiki
             "\n\nIf it annoys you, please report the error to ema@janwillemboer.nl.\nDo you want to copy the error details to the clipboard?",
             "Ema regrets to inform you", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
             {
-                Clipboard.SetText("To: ema@janwillemboer.nl\nSubject: Ema Personal Wiki annoyance\n\n" + e.Exception.ToString());
+                Clipboard.SetText("To: ema@janwillemboer.nl\nSubject: Ema Personal Wiki error report\n\n" + e.Exception.ToString());
             }
         }
 
@@ -152,26 +156,25 @@ namespace EmaPersonalWiki
                 }
             }
         }
-
-
-        internal static void GetStorageDir(bool useDropboxPath, bool fromAppStart)
+        
+        internal static void InitializeStorageDir(bool useDropboxPath, bool fromAppStart)
         {
             //try from settings
-            StorageDirectory = Settings.Default.DropboxDir;
+            _storageDirectory = Settings.Default.DropboxDir;
 
             if (useDropboxPath)
             {
-                if (string.IsNullOrEmpty(StorageDirectory) || !Directory.Exists(StorageDirectory))
+                if (string.IsNullOrEmpty(_storageDirectory) || !Directory.Exists(_storageDirectory))
                 {
-                    StorageDirectory = DropboxSettings.GetDropboxPath();
-                    if (Directory.Exists(StorageDirectory))
+                    _storageDirectory = DropboxSettings.GetDropboxPath();
+                    if (Directory.Exists(_storageDirectory))
                     {
-                        StorageDirectory = Path.Combine(StorageDirectory, "PersonalWiki");
-                        if (!Directory.Exists(StorageDirectory))
+                        _storageDirectory = Path.Combine(_storageDirectory, "PersonalWiki");
+                        if (!Directory.Exists(_storageDirectory))
                         {
                             try
                             {
-                                Directory.CreateDirectory(StorageDirectory);
+                                Directory.CreateDirectory(_storageDirectory);
                             }
                             catch (Exception)
                             {
@@ -182,18 +185,18 @@ namespace EmaPersonalWiki
             }
 
             var shouldSave = false;
-            while (string.IsNullOrEmpty(StorageDirectory) || !Directory.Exists(StorageDirectory))
+            while (string.IsNullOrEmpty(_storageDirectory) || !Directory.Exists(_storageDirectory))
             {
                 var slw = new StorageLocationWindow();
                 if (slw.ShowDialog().GetValueOrDefault())
                 {
                     shouldSave = true;
-                    StorageDirectory = slw.SelectedPath;
-                    if (!Directory.Exists(StorageDirectory))
+                    _storageDirectory = slw.SelectedPath;
+                    if (!Directory.Exists(_storageDirectory))
                     {
                         try
                         {
-                            Directory.CreateDirectory(StorageDirectory);
+                            Directory.CreateDirectory(_storageDirectory);
                         }
                         catch (Exception ex)
                         {
@@ -215,10 +218,21 @@ namespace EmaPersonalWiki
 
             if (shouldSave)
             {
-                Settings.Default.DropboxDir = StorageDirectory;
-                Settings.Default.Save();
+                try
+                {
+                    Settings.Default.DropboxDir = _storageDirectory;
+                    Settings.Default.Save();
+                }
+                catch (Exception)
+                {
+                }
             }
         }
 
+
+        internal static void AssignStorageDirectory(string savePath)
+        {
+            _storageDirectory = savePath;
+        }
     }
 }

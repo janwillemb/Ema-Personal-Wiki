@@ -59,18 +59,18 @@ namespace EmaPersonalWiki
             switch (MessageBox.Show("Should I try to use the Dropbox directory?", "Ema Personal Wiki asks", MessageBoxButton.YesNoCancel))
             {
                 case MessageBoxResult.Yes:
-                    App.GetStorageDir(true, false);
+                    App.InitializeStorageDir(true, false);
                     break;
 
                 case MessageBoxResult.No:
-                    App.GetStorageDir(false, false);
+                    App.InitializeStorageDir(false, false);
                     break;
             }
 
             if (string.IsNullOrEmpty(App.StorageDirectory))
             {
                 //application can't run this way
-                App.StorageDirectory = savePath;
+                App.AssignStorageDirectory(savePath);
             }
             showStorageDir();
         }
