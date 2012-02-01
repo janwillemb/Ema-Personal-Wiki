@@ -38,7 +38,7 @@ public class PagesDal {
 					R.string.storage_dir_creation_failed).toString());
 		}
 
-		createBackup("2", isNewInstallation);
+		//createBackup("2", isNewInstallation);
 
 		createAndReadCss();
 

@@ -25,9 +25,13 @@ public class DropboxWrapper {
 	}
 
 	public Entry getOrCreateFolder(String name) throws DropboxException {
-		Entry retval = mAPI.metadata(name, 0, null, true, null);
-		if (retval.isDir) {
-			return retval;
+		try {
+			Entry retval = mAPI.metadata(name, 0, null, true, null);
+			if (retval.isDir) {
+				return retval;
+			}
+		} catch (DropboxException ex) {
+
 		}
 		return mAPI.createFolder(name);
 	}
