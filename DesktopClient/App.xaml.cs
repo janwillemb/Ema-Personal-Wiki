@@ -124,7 +124,7 @@ namespace EmaPersonalWiki
 
         void App_DispatcherUnhandledException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
         {
-            log(e.ToString());
+            log(e.Exception.ToString());
             
             if (MessageBox.Show("Unfortunately, an error occurred from which Ema Personal Wiki could not recover.\n\nThe application will close. For what it's worth, the error message is:\n" + e.Exception.Message +
             "\n\nIf it annoys you, please report the error to ema@janwillemboer.nl.\nDo you want to copy the error details to the clipboard?",
