@@ -4,9 +4,7 @@
 	<classpathentry kind="src" path="gen"/>
 	<classpathentry kind="con" path="com.android.ide.eclipse.adt.ANDROID_FRAMEWORK"/>
 	<classpathentry exported="true" kind="lib" path="D:/Lib/Markdown/markdownj-1.0.2b4-0.3.0.jar" sourcepath="D:/lib/Markdown/markdownj/core/src/main/java"/>
-	<classpathentry kind="lib" path="D:/Lib/dropbox-android-sdk-1.2.2/lib/dropbox-android-sdk-1.2.2.jar"/>
 	<classpathentry kind="lib" path="D:/Lib/commons-io-2.1/commons-io-2.1.jar"/>
-	<classpathentry kind="lib" path="D:/Lib/dropbox-android-sdk-1.2.2/lib/httpmime-4.0.3.jar"/>
-	<classpathentry kind="lib" path="D:/Lib/dropbox-android-sdk-1.2.2/lib/json_simple-1.1.jar"/>
+	<classpathentry exported="true" kind="con" path="com.android.ide.eclipse.adt.LIBRARIES"/>
 	<classpathentry kind="output" path="bin/classes"/>
 </classpath>

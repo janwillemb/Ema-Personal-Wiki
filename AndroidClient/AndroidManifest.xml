@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-	package="com.janwillemboer.ema" android:versionCode="7"
-	android:versionName="2.0.7">
+	package="com.janwillemboer.ema" android:versionCode="8"
+	android:versionName="2.0.8">
 	<application android:icon="@drawable/icon" android:label="@string/app_name">
 		<provider android:name=".LocalFileContentProvider"
 			android:authorities="com.janwillemboer.ema.localfile" />

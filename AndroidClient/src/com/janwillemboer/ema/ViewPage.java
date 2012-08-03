@@ -286,8 +286,7 @@ public class ViewPage extends Activity {
 						}
 
 						if (mDropboxAuthentication == null) {
-							mDropboxAuthentication = new DropboxAuthentication(
-									ViewPage.this);
+							mDropboxAuthentication = new DropboxAuthentication(ViewPage.this);
 						}
 
 						if (!mDropboxAuthentication.getIsAuthenticated()) {
@@ -395,8 +394,9 @@ public class ViewPage extends Activity {
 						"content://com.janwillemboer.ema.localfile/");
 
 				// log("Loading html in view " + mActiveWebview);
-				getInvisibleWebView().loadData(htmlBody, "text/html",
-						FileStuff.ENCODING);
+				getInvisibleWebView().loadDataWithBaseURL("fake://i/will/smack/the/engineer/behind/this/scheme", 
+						htmlBody, "text/html",
+						FileStuff.ENCODING, "");
 				// will be made visible in the onpageload eventhandler
 			}
 		}).start();
