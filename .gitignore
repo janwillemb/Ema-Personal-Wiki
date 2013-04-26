@@ -7,3 +7,5 @@
 *.suo
 Thumbs.db
 */_ReSharper*/*
+/EmaPersonalWeb
+/DesktopClient/packages

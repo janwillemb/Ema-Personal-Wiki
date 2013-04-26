@@ -20,24 +20,24 @@ namespace EmaPersonalWiki
     /// </summary>
     public partial class EditPage : Window
     {
-        private PagesDal mDal;
-        private string mPageName;
+        private readonly PagesDal _dal;
+        private readonly string _pageName;
 
         public EditPage(string pageName)
         {
             InitializeComponent();
 
-            mDal = new PagesDal();
-            mPageName = pageName;
+            _dal = new PagesDal(new LocalWikiStorage(), new DesktopHtmlWrapper());
+            _pageName = pageName;
 
-            Title = Title + " " + mPageName;
-            textBox1.Text = mDal.GetTextOfPage(pageName);
+            Title = Title + " " + _pageName;
+            textBox1.Text = _dal.GetTextOfPage(pageName);
             textBox1.AllowDrop = true;
         }
 
         private void button1_Click(object sender, RoutedEventArgs e)
         {
-            mDal.SavePage(mPageName, textBox1.Text);
+            _dal.SavePage(_pageName, textBox1.Text);
             Close();
         }
 
@@ -64,7 +64,7 @@ namespace EmaPersonalWiki
                 {
                     var fileToCopy = new FileInfo(fileName);
 
-                    var newFileName = string.Concat(mDal.GetSafePageName(mPageName), ".", HttpUtility.UrlEncode(fileToCopy.Name));
+                    var newFileName = string.Concat(WikiStorage.GetSafePageName(_pageName), ".", HttpUtility.UrlEncode(fileToCopy.Name));
                     var newFile = new FileInfo(System.IO.Path.Combine(App.StorageDirectory, newFileName));
                     if (newFile.Exists)
                     {

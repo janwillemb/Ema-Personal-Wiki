@@ -86,13 +86,19 @@
       <DependentUpon>About.xaml</DependentUpon>
     </Compile>
     <Compile Include="CheckboxPattern.cs" />
+    <Compile Include="DesktopHtmlWrapper.cs" />
     <Compile Include="DropboxSettings.cs" />
     <Compile Include="EditPage.xaml.cs">
       <DependentUpon>EditPage.xaml</DependentUpon>
     </Compile>
+    <Compile Include="FileHelpers.cs" />
     <Compile Include="HistoryItem.cs" />
     <Compile Include="HotKey.cs" />
     <Compile Include="HotKeyWinApi.cs" />
+    <Compile Include="IHtmlWrapper.cs" />
+    <Compile Include="LocalWikiStorage.cs" />
+    <Compile Include="SearchAlgorithm.cs" />
+    <Compile Include="WikiStorage.cs" />
     <Compile Include="JavascriptInterop.cs" />
     <Compile Include="PagesDal.cs" />
     <Compile Include="RelayCommand.cs" />

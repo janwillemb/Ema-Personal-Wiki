@@ -17,12 +17,12 @@ namespace EmaPersonalWiki
 {
     public partial class ViewPage : Window
     {
-        private FileSystemWatcher mWatcher;
-        private HistoryItem mCurrentPage;
-        private PagesDal mDal;
-        private string mSearchWatermarkText;
-        private Brush mSearchWatermarkBrush;
-        private FontStyle mSearchWatermarkFontStyle;
+        private FileSystemWatcher _watcher;
+        private HistoryItem _currentPage;
+        private readonly PagesDal _dal;
+        private readonly string _searchWatermarkText;
+        private readonly Brush _searchWatermarkBrush;
+        private readonly FontStyle _searchWatermarkFontStyle;
 
         public ViewPage()
         {
@@ -32,11 +32,11 @@ namespace EmaPersonalWiki
 
             if (!string.IsNullOrEmpty(App.Command))
             {
-                mCurrentPage = new HistoryItem(App.Command);
+                _currentPage = new HistoryItem(App.Command);
             }
             else
             {
-                mCurrentPage = new HistoryItem(PagesDal.DEFAULT_PAGE);
+                _currentPage = new HistoryItem(WikiStorage.DefaultPage);
             }
 
             Keyboard.AddGotKeyboardFocusHandler(this, gotKeyboardFocus);
@@ -49,11 +49,11 @@ namespace EmaPersonalWiki
             jsinterop.InvokeFromJavascript += jsinterop_InvokeFromJavascript;
             webBrowser1.PreviewKeyDown += webBrowser1_KeyDown;
 
-            mSearchWatermarkText = textBoxSearch.Text;
-            mSearchWatermarkBrush = textBoxSearch.Foreground;
-            mSearchWatermarkFontStyle = textBoxSearch.FontStyle;
+            _searchWatermarkText = textBoxSearch.Text;
+            _searchWatermarkBrush = textBoxSearch.Foreground;
+            _searchWatermarkFontStyle = textBoxSearch.FontStyle;
 
-            mDal = new PagesDal();
+            _dal = new PagesDal(new LocalWikiStorage(), new DesktopHtmlWrapper());
 
             EditCommand = new RelayCommand(() => buttonEdit_Click(null, null));
             InputBindings.Add(new KeyBinding(EditCommand, new KeyGesture(Key.E, ModifierKeys.Control)));
@@ -182,29 +182,29 @@ namespace EmaPersonalWiki
 
         private void initWatcher()
         {
-            mWatcher = new FileSystemWatcher();
-            mWatcher.Changed += mWatcher_Changed;
-            mWatcher.Created += mWatcher_Changed;
-            mWatcher.Deleted += mWatcher_Changed;
-            mWatcher.Renamed += mWatcher_Changed;
-            mWatcher.Error += mWatcher_Error;
+            _watcher = new FileSystemWatcher();
+            _watcher.Changed += mWatcher_Changed;
+            _watcher.Created += mWatcher_Changed;
+            _watcher.Deleted += mWatcher_Changed;
+            _watcher.Renamed += mWatcher_Changed;
+            _watcher.Error += mWatcher_Error;
 
-            mWatcher.Path = App.StorageDirectory;
-            mWatcher.EnableRaisingEvents = true;
+            _watcher.Path = App.StorageDirectory;
+            _watcher.EnableRaisingEvents = true;
         }
 
         private int mWatcherRetries = 0;
         void mWatcher_Error(object sender, ErrorEventArgs e)
         {
             mWatcherRetries++;
-            mWatcher.EnableRaisingEvents = false;
-            mWatcher.Changed -= mWatcher_Changed;
-            mWatcher.Created -= mWatcher_Changed;
-            mWatcher.Deleted -= mWatcher_Changed;
-            mWatcher.Renamed -= mWatcher_Changed;
-            mWatcher.Error -= mWatcher_Error;
-            mWatcher.Dispose();
-            mWatcher = null;
+            _watcher.EnableRaisingEvents = false;
+            _watcher.Changed -= mWatcher_Changed;
+            _watcher.Created -= mWatcher_Changed;
+            _watcher.Deleted -= mWatcher_Changed;
+            _watcher.Renamed -= mWatcher_Changed;
+            _watcher.Error -= mWatcher_Error;
+            _watcher.Dispose();
+            _watcher = null;
 
             if (mWatcherRetries >= Settings.Default.NumberOfRetriesAfterFileFailure)
             {
@@ -221,7 +221,7 @@ namespace EmaPersonalWiki
                 int checkbox;
                 if (int.TryParse(e.Parameters, out checkbox))
                 {
-                    mDal.SetCheckbox(mCurrentPage.PageName, checkbox);
+                    _dal.SetCheckbox(_currentPage.PageName, checkbox);
                 }
             }
         }
@@ -295,20 +295,20 @@ namespace EmaPersonalWiki
         }
         private void setCurrentPageWithHistory(HistoryItem newPage)
         {
-            if (mHistoryStack.Count == 0 || !mHistoryStack.Peek().Equals(mCurrentPage))
+            if (mHistoryStack.Count == 0 || !mHistoryStack.Peek().Equals(_currentPage))
             {
                 //previous page on history stack
-                mCurrentPage.ScrollPosition = getCurrentScrollPos();
-                mHistoryStack.Push(mCurrentPage);
+                _currentPage.ScrollPosition = getCurrentScrollPos();
+                mHistoryStack.Push(_currentPage);
             }
-            mCurrentPage = newPage;
+            _currentPage = newPage;
         }
 
         void mWatcher_Changed(object sender, FileSystemEventArgs e)
         {
             try
             {
-                mCurrentPage.ScrollPosition = getCurrentScrollPos();
+                _currentPage.ScrollPosition = getCurrentScrollPos();
                 refresh();
                 mWatcherRetries = 0;
             }
@@ -330,15 +330,15 @@ namespace EmaPersonalWiki
 
             string html;
 
-            if (mCurrentPage.IsVirtual)
+            if (_currentPage.IsVirtual)
             {
-                html = mCurrentPage.Content;
+                html = _currentPage.Content;
             }
             else
             {
-                html = mDal.GetHtmlOfPage(mCurrentPage.PageName);
+                html = _dal.GetHtmlOfPage(_currentPage.PageName);
             }
-            setTitle(mCurrentPage.Title);
+            setTitle(_currentPage.Title);
 
             webBrowser1.NavigateToString(html);
 
@@ -346,7 +346,7 @@ namespace EmaPersonalWiki
         }
         void webBrowser1_LoadCompleted(object sender, NavigationEventArgs e)
         {
-            webBrowser1.InvokeScript("scrollTo", mCurrentPage.ScrollPosition);
+            webBrowser1.InvokeScript("scrollTo", _currentPage.ScrollPosition);
 
             if (mHasFocus)
                 focusOnBrowser();
@@ -368,7 +368,7 @@ namespace EmaPersonalWiki
         public ICommand HomeCommand { get; set; }
         private void buttonHome_Click(object sender, RoutedEventArgs e)
         {
-            setCurrentPageWithHistory(PagesDal.DEFAULT_PAGE);
+            setCurrentPageWithHistory(WikiStorage.DefaultPage);
             refresh();
         }
 
@@ -379,21 +379,21 @@ namespace EmaPersonalWiki
             {
                 return;
             }
-            mCurrentPage = mHistoryStack.Pop();
+            _currentPage = mHistoryStack.Pop();
             refresh();
         }
 
         public ICommand EditCommand { get; set; }
         private void buttonEdit_Click(object sender, RoutedEventArgs e)
         {
-            var editWin = new EditPage(mCurrentPage.PageName);
+            var editWin = new EditPage(_currentPage.PageName);
             editWin.ShowDialog();
         }
 
         public ICommand RecentCommand { get; set; }
         private void recentModifications()
         {
-            setCurrentPageWithHistory(HistoryItem.CreateVirtual("Recent changes", mDal.RecentChanges()));
+            setCurrentPageWithHistory(HistoryItem.CreateVirtual("Recent changes", _dal.RecentChanges()));
             refresh();
         }
 
@@ -404,7 +404,7 @@ namespace EmaPersonalWiki
         {
             var query = textBoxSearch.Text;
 
-            if (!string.IsNullOrEmpty(query) && query != mSearchWatermarkText)
+            if (!string.IsNullOrEmpty(query) && query != _searchWatermarkText)
             {
                 var m = _gotoPageRegex.Match(query);
                 if (m.Success)
@@ -417,7 +417,7 @@ namespace EmaPersonalWiki
                 }
 
                 //do a normal seacrh
-                var findResultsHtml = mDal.Find(query);
+                var findResultsHtml = _dal.Find(query);
 
                 setCurrentPageWithHistory(HistoryItem.CreateVirtual("Search results", findResultsHtml));
 
@@ -427,7 +427,7 @@ namespace EmaPersonalWiki
 
         private void textBoxSearch_GotFocus(object sender, RoutedEventArgs e)
         {
-            if (textBoxSearch.Text.Equals(mSearchWatermarkText))
+            if (textBoxSearch.Text.Equals(_searchWatermarkText))
             {
                 textBoxSearch.Foreground = Brushes.Black;
                 textBoxSearch.Text = string.Empty;
@@ -443,9 +443,9 @@ namespace EmaPersonalWiki
         {
             if (string.IsNullOrEmpty(textBoxSearch.Text))
             {
-                textBoxSearch.Text = mSearchWatermarkText;
-                textBoxSearch.Foreground = mSearchWatermarkBrush;
-                textBoxSearch.FontStyle = mSearchWatermarkFontStyle;
+                textBoxSearch.Text = _searchWatermarkText;
+                textBoxSearch.Foreground = _searchWatermarkBrush;
+                textBoxSearch.FontStyle = _searchWatermarkFontStyle;
             }
         }
 
@@ -472,18 +472,18 @@ namespace EmaPersonalWiki
             registerHotkey();
 
             //user may have changed the storage dir by now.
-            if (!mWatcher.Path.Equals(App.StorageDirectory))
+            if (!_watcher.Path.Equals(App.StorageDirectory))
             {
-                mWatcher.Path = App.StorageDirectory;
+                _watcher.Path = App.StorageDirectory;
             }
         }
 
         private void MenuItemDelete_Click(object sender, RoutedEventArgs e)
         {
-            if (System.Windows.MessageBox.Show("You're about to delete page " + mCurrentPage.PageName +
+            if (System.Windows.MessageBox.Show("You're about to delete page " + _currentPage.PageName +
                 ". You can undo this if changes are synchronized with Dropbox.", "Ema Personal Wiki states", MessageBoxButton.OKCancel) == MessageBoxResult.OK)
             {
-                mDal.SavePage(mCurrentPage.PageName, string.Empty);
+                _dal.SavePage(_currentPage.PageName, string.Empty);
             }
         }
 
