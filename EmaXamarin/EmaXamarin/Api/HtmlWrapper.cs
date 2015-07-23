@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System.Collections.Generic;
+using System.IO;
 
 namespace EmaXamarin.Api
 {
@@ -18,22 +19,23 @@ namespace EmaXamarin.Api
             return html.Replace(" src=\"emafile:", string.Concat(" src=\"file:///", _fileRepository.StorageDirectory.Replace("\\", "/"), "/"));
         }
 
+        public IEnumerable<string> WrapLines(string title, IEnumerable<string> contents)
+        {
+            yield return @"<html><head>";
+            yield return @"    <meta http-equiv='Content-Type' content='text/html;charset=UTF-8'/>";
+            yield return @"    <title>" + title + @" - Ema Personal Wiki</title>";
+            yield return @"    <style type='text/css'>" + _css + @"</style></head>";
+            yield return @" <body><div id='ema-body'>";
+            foreach (var line in contents)
+            {
+                yield return line;
+            };
+            yield return @"</div></body></html>";
+        }
+
         public string Wrap(string title, string contents)
         {
-            return @"
-<html>
-<head>
-    <meta http-equiv='Content-Type' content='text/html;charset=UTF-8'/>
-    <title>" + title + @" - Ema Personal Wiki</title>
-    <style type='text/css'>" + _css + @"</style>
-    <script type='text/javascript'>
-        
-    </script>
-</head>
-<body oncontextmenu='return false'><div id='ema-buttons'><input type='button' value='Edit' onclick='location.href=""emacmd:Edit""'/><div id='ema-body'>" +
-                   contents + @"  
-</div></body>
-</html>";
+            return string.Join("\n", WrapLines(title, new[] {contents}));
         }
     }
 }

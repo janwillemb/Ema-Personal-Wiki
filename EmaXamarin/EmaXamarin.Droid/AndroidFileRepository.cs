@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Threading.Tasks;
 using EmaXamarin.Api;
 using Environment = Android.OS.Environment;
 
@@ -7,10 +8,22 @@ namespace EmaXamarin.Droid
 {
     internal class AndroidFileRepository : IFileRepository
     {
-        private readonly bool _isInitialized;
+        private bool _isInitialized;
+        private string _storageDirectory;
+        private const string ErrorMessage = "Could not initialize external storage. Has the SD-card been mounted?";
 
         public AndroidFileRepository()
         {
+            _storageDirectory = PersistedState.CustomStorageDirectory;
+        }
+
+        private bool Initialize(bool throwOnError)
+        {
+            if (_isInitialized)
+            {
+                return true;
+            }
+
             try
             {
                 if (!Directory.Exists(StorageDirectory))
@@ -18,19 +31,23 @@ namespace EmaXamarin.Droid
                     Directory.CreateDirectory(StorageDirectory);
                 }
                 _isInitialized = true;
+                return true;
             }
-            catch
+            catch (Exception ex)
             {
-
-                throw;
+                if (throwOnError)
+                {
+                    throw new IOException(ErrorMessage, ex);
+                }
+                return false;
             }
         }
 
         public string GetText(string fileName)
         {
-            if (!_isInitialized)
+            if (!Initialize(false))
             {
-                return "Could not initialize external storage. Is the SD-card mounted?";
+                return ErrorMessage;
             }
 
             var path = GetPath(fileName);
@@ -47,16 +64,66 @@ namespace EmaXamarin.Droid
             return Path.Combine(StorageDirectory, path);
         }
 
-        public string StorageDirectory => Path.Combine(Environment.ExternalStorageDirectory.AbsolutePath, "PersonalWiki");
+        public string DefaultStorageDirectory => Path.Combine(Environment.ExternalStorageDirectory.AbsolutePath, "PersonalWiki");
+
+        public string StorageDirectory
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(_storageDirectory))
+                {
+                    return DefaultStorageDirectory;
+                }
+                return _storageDirectory;
+            }
+            set
+            {
+                _storageDirectory = value;
+                _isInitialized = false;
+                Initialize(true);
+            }
+        }
 
         public void SaveText(string fileName, string text)
         {
-            if (!_isInitialized)
-            {
-                return;
-            }
+            Initialize(true);
 
             File.WriteAllText(GetPath(fileName), text);
         }
+
+        public Task<bool> MoveTo(string otherDirectory)
+        {
+            return Task.Run(() =>
+            {
+                Directory.Move(StorageDirectory, otherDirectory);
+                StorageDirectory = otherDirectory;
+                return true;
+            });
+        }
+
+        public Task<bool> CopyTo(string otherDirectory)
+        {
+            return Task.Run(() =>
+            {
+                CopyFilesRecursively(new DirectoryInfo(StorageDirectory), new DirectoryInfo(otherDirectory));
+                StorageDirectory = otherDirectory;
+                return true;
+            });
+        }
+
+        public static void CopyFilesRecursively(DirectoryInfo source, DirectoryInfo target)
+        {
+            if (!target.Exists)
+            {
+                target.Create();
+            }
+
+            foreach (DirectoryInfo dir in source.GetDirectories())
+                CopyFilesRecursively(dir, target.CreateSubdirectory(dir.Name));
+            foreach (FileInfo file in source.GetFiles())
+                file.CopyTo(Path.Combine(target.FullName, file.Name), true);
+        }
+
+
     }
 }

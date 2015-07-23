@@ -1,10 +1,12 @@
-﻿using System;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
 
 namespace EmaXamarin.Api
 {
+    /// <summary>
+    /// retrieves, transforms and saves pages. 
+    /// </summary>
     public class PageService
     {
         public const string DefaultPage = "Home";
@@ -12,8 +14,6 @@ namespace EmaXamarin.Api
         private readonly IWikiStorage _storage;
         private readonly IHtmlWrapper _wrapper;
         private readonly IMarkdown _markdown;
-        private int _checkboxIndex;
-        private int _checkboxToTick;
 
         public PageService(IWikiStorage storage, IHtmlWrapper wrapper, IMarkdown markdown)
         {
@@ -27,7 +27,7 @@ namespace EmaXamarin.Api
             var html = _markdown.Transform(_storage.GetFileContents(pageName));
             html = _wrapper.ReplaceFileReferences(html);
 
-            if (String.IsNullOrEmpty(html))
+            if (string.IsNullOrEmpty(html))
             {
                 html = "<span style='color: Silver'>(This page is blank. Click the Edit button to add content.)</span>";
             }
@@ -38,36 +38,6 @@ namespace EmaXamarin.Api
         public void SavePage(string pageName, string text)
         {
             _storage.SavePage(pageName, text);
-        }
-
-        public void SetCheckbox(string pageName, int checkbox)
-        {
-            var text = _storage.GetFileContents(pageName);
-
-            //this isn't actually very threadsafe, but who cares for now
-            _checkboxToTick = checkbox;
-            _checkboxIndex = 0;
-            text = StatefulCheckboxPattern.CheckBoxesRegex.Replace(text, Ticker);
-            SavePage(pageName, text);
-        }
-
-        private string Ticker(Match m)
-        {
-            string replacement;
-            if (_checkboxIndex == _checkboxToTick)
-            {
-                replacement = m.Groups[0].Value
-                    .Replace("[ ]", "[_]")
-                    .Replace("[x]", "[ ]")
-                    .Replace("[X]", "[ ]")
-                    .Replace("[_]", "[x]");
-            }
-            else
-            {
-                replacement = m.Groups[0].Value;
-            }
-            _checkboxIndex++;
-            return replacement;
         }
 
         public string RecentChanges()
@@ -87,29 +57,30 @@ namespace EmaXamarin.Api
             return _wrapper.Wrap("Recent changes", sb.ToString());
         }
 
-        public string Find(string query)
+        public IEnumerable<string> Find(string query)
+        {
+            return _wrapper.WrapLines("Search results for \"" + query + "\"", FindInner(query));
+        }
+
+        private IEnumerable<string> FindInner(string query)
         {
             var results = _storage.Find(query);
+            bool hadResult = false;
 
-            var sb = new StringBuilder();
-            if (results.Length > 0)
+            foreach (var result in results.OrderByDescending(x => x.Relevance))
             {
-                foreach (var result in results.OrderByDescending(x => x.Relevance))
-                {
-                    sb.AppendFormat(@"
-                    <div class='ema-searchresult'>
-                        <div class='ema-searchresult-link'><a href='ema:{0}'>{0}</a></div>
-                        <div class='ema-searchresult-snippet'>{1}</div>
-                    </div>
-                ", result.PageName, result.Snippet);
-                }
-            }
-            else
-            {
-                sb.Append("<div class='ema-search-noresults'>No results found</div>");
+                hadResult = true;
+                yield return string.Format(@"
+                        <div class='ema-searchresult'>
+                            <div class='ema-searchresult-link'><a href='ema:{0}'>{0}</a></div>
+                            <div class='ema-searchresult-snippet'>{1}</div>
+                        </div>", result.PageName, result.Snippet);
             }
 
-            return _wrapper.Wrap("Search results for \"" + query + "\"", sb.ToString());
+            if (!hadResult)
+            {
+                yield return "<div class='ema-search-noresults'>No results found</div>";
+            }
         }
 
         public string GetTextOfPage(string pageName)

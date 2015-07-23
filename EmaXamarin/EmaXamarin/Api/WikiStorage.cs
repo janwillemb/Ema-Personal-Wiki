@@ -1,13 +1,17 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace EmaXamarin.Api
 {
     public abstract class WikiStorage : IWikiStorage
     {
         public static Regex InvalidPageChars = new Regex(@"[^\w\-\.]");
-        private const string Extension = ".txt";
+        protected const string Extension = ".txt";
 
         public string GetFileContents(string pageName)
         {
@@ -19,29 +23,13 @@ namespace EmaXamarin.Api
             if (string.IsNullOrEmpty(contents) && isDefaultPage)
             {
                 //return default text
-                #region default page text
-                contents =
-                    @"Home
-======
-
-This is the homepage for your personal wiki. You can edit this page by clicking the Edit button in the toolbar.
-
-
-Create a link to a new or existing page by surrounding a word with curly brackets like {Todo}, or by using a WikiWord (a word with mixed casing).
-
-
-To synchronize the wiki pages between your desktop computer and an Android device, install Dropbox on the desktop computer and provide your
-dropbox credentials in the Android app.
-
-
-This personal wiki uses [Markdown formatting](http://en.wikipedia.org/wiki/Markdown#Syntax_examples) for text editing. 
-
-![Ema Personal Wiki](http://janwillemboer.nl/ema/android/about_ema.png)  
-
-Ema Personal Wiki, version 1.0, is a notebook with linkable pages for tracking your ideas, tasks, projects, notes, brainstorms - in short, your life - in the most flexible way.
-If you have any questions, don't hesitate to contact the developer at ema@janwillemboer.nl or go to 
-<http://www.janwillemboer.nl/blog/ema-personal-wiki>";
-                #endregion
+                using (var s = typeof(App).GetTypeInfo().Assembly.GetManifestResourceStream("EmaXamarin.DefaultHomeText.txt"))
+                {
+                    using (var reader = new StreamReader(s))
+                    {
+                        contents = reader.ReadToEnd();
+                    }
+                }
             }
 
             return contents ?? string.Empty;
@@ -60,7 +48,7 @@ If you have any questions, don't hesitate to contact the developer at ema@janwil
         }
 
         protected abstract void SavePageInner(string normalizedPageName, string text);
-        public abstract SearchResult[] Find(string query);
+        public abstract IEnumerable<SearchResult> Find(string query);
         public abstract SearchResult[] RecentChanges();
 
     }

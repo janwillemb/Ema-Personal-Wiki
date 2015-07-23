@@ -15,8 +15,6 @@ namespace EmaXamarin.Api
 
             var result = CommonMark.CommonMarkConverter.Convert(text);
 
-            result = new StatefulCheckboxPattern().Transform(result);
-
             //prevent html from being replaced by wikiwords
             var htmlTags = new Queue<string>();
             result = HtmlTagsRegex.Replace(result, m =>

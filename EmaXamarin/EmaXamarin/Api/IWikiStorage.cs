@@ -1,10 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace EmaXamarin.Api
 {
     public interface IWikiStorage
     {
-        SearchResult[] Find(string query);
+        IEnumerable<SearchResult> Find(string query);
         string GetFileContents(string pageName);
         SearchResult[] RecentChanges();
         void SavePage(string pageName, string text);

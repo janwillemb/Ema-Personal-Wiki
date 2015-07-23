@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.IO;
 using EmaXamarin.Api;
 
 namespace EmaXamarin.Droid
@@ -27,9 +29,19 @@ namespace EmaXamarin.Droid
             _fileRepository.SaveText(normalizedPageName, text);
         }
 
-        public override SearchResult[] Find(string query)
+        public override IEnumerable<SearchResult> Find(string query)
         {
-            throw new NotImplementedException();
+            var storageDir = new DirectoryInfo(_fileRepository.StorageDirectory);
+            var results = new List<SearchResult>();
+            foreach (var file in storageDir.GetFiles("*" + Extension))
+            {
+                var contents = _fileRepository.GetText(file.FullName);
+                var result = SearchAlgorithm.SearchPage(Path.GetFileNameWithoutExtension(file.FullName), contents, query);
+                if (result.Relevance > 0)
+                {
+                    yield return result;
+                }
+            }
         }
     }
 }
