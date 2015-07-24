@@ -1,5 +1,7 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using EmaXamarin.Api;
+using EmaXamarin.CloudStorage;
 using Xamarin.Forms;
 
 namespace EmaXamarin.Pages
@@ -7,14 +9,36 @@ namespace EmaXamarin.Pages
     public class SettingsPage : ContentPage
     {
         private readonly IFileRepository _fileRepository;
+        private readonly ApplicationEvents _applicationEvents;
         private SwitchCell _customStorageSwitch;
         private EntryCell _customStorageDirectoryEntry;
+        private DropboxUserPermission _dropboxUserPermission;
 
-        public SettingsPage(IFileRepository fileRepository)
+        public SettingsPage(IFileRepository fileRepository, IExternalBrowserService externalBrowserService, ApplicationEvents applicationEvents)
         {
             _fileRepository = fileRepository;
+            _applicationEvents = applicationEvents;
 
             InitializeStorageSettings(fileRepository);
+
+            var dropbox = new SwitchCell
+            {
+                Text = "Use Dropbox"
+            };
+            dropbox.OnChanged += (sender, args) =>
+            {
+                if (args.Value)
+                {
+                    applicationEvents.Resumed += ApplicationEventsOnResumed;
+                    _dropboxUserPermission = new DropboxUserPermission();
+                    _dropboxUserPermission.AskUserForPermission(externalBrowserService);
+                    //(continue in ApplicationEventsOnResumed())
+                }
+                else
+                {
+                    PersistedState.UserLogin = null;
+                }
+            };
 
             Content = new TableView
             {
@@ -25,9 +49,23 @@ namespace EmaXamarin.Pages
                     {
                         _customStorageSwitch,
                         _customStorageDirectoryEntry
+                    },
+                    new TableSection("Cloud sync")
+                    {
+                        dropbox
                     }
                 }
             };
+        }
+
+        private async void ApplicationEventsOnResumed(object sender, EventArgs eventArgs)
+        {
+            _applicationEvents.Resumed -= ApplicationEventsOnResumed;
+            if (_dropboxUserPermission != null)
+            {
+                var userPermission = await _dropboxUserPermission.VerifiedUserPermission();
+                PersistedState.UserLogin = userPermission;
+            }
         }
 
         private void InitializeStorageSettings(IFileRepository fileRepository)
@@ -47,17 +85,14 @@ namespace EmaXamarin.Pages
             _customStorageSwitch.OnChanged += (sender, args) =>
             {
                 _customStorageDirectoryEntry.IsEnabled = args.Value;
-                if (!args.Value)
+                if (args.Value)
                 {
                     //reset to default
                     _customStorageDirectoryEntry.Text = fileRepository.DefaultStorageDirectory;
                     SetStorageDir(fileRepository.DefaultStorageDirectory);
                 }
             };
-            _customStorageDirectoryEntry.Completed += (sender, args) =>
-            {
-                SetStorageDir(_customStorageDirectoryEntry.Text);
-            };
+            _customStorageDirectoryEntry.Completed += (sender, args) => { SetStorageDir(_customStorageDirectoryEntry.Text); };
         }
 
         /// <summary>
@@ -66,6 +101,7 @@ namespace EmaXamarin.Pages
         /// <param name="value"></param>
         private async void SetStorageDir(string value)
         {
+            Exception exception = null;
             try
             {
                 if (_fileRepository.StorageDirectory != value)
@@ -101,7 +137,13 @@ namespace EmaXamarin.Pages
             }
             catch (IOException ex)
             {
-                await DisplayAlert("Not good", ex.Message, "OK");
+                exception = ex;
+            }
+
+            if (exception != null)
+            {
+                //await is not allowed in the catch clause (by Xamarin studio)
+                await DisplayAlert("Not good", exception.Message, "OK");
             }
         }
     }

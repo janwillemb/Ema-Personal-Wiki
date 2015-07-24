@@ -12,11 +12,6 @@ namespace EmaXamarin.Droid
         private string _storageDirectory;
         private const string ErrorMessage = "Could not initialize external storage. Has the SD-card been mounted?";
 
-        public AndroidFileRepository()
-        {
-            _storageDirectory = PersistedState.CustomStorageDirectory;
-        }
-
         private bool Initialize(bool throwOnError)
         {
             if (_isInitialized)
@@ -64,7 +59,13 @@ namespace EmaXamarin.Droid
             return Path.Combine(StorageDirectory, path);
         }
 
-        public string DefaultStorageDirectory => Path.Combine(Environment.ExternalStorageDirectory.AbsolutePath, "PersonalWiki");
+		public string DefaultStorageDirectory 
+		{
+			get 
+			{
+				return Path.Combine (Environment.ExternalStorageDirectory.AbsolutePath, "PersonalWiki");
+			}
+		}
 
         public string StorageDirectory
         {

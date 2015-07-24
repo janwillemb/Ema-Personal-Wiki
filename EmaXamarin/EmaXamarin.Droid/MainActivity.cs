@@ -1,5 +1,6 @@
 ﻿using System;
 using Android.App;
+using Android.Content;
 using Android.Content.PM;
 using Android.OS;
 using Android.Views;
@@ -21,7 +22,7 @@ namespace EmaXamarin.Droid
 
             AlwaysShowMenuButton();
 
-            var app = new App(new AndroidWikiStorage(androidFileRepository), androidFileRepository);
+            var app = new App(new AndroidWikiStorage(androidFileRepository), androidFileRepository, new ExternalBrowserService());
             LoadApplication(app);
         }
 

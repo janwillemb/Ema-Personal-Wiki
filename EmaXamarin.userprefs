@@ -1,0 +1,17 @@
+﻿<Properties StartupItem="EmaXamarin\EmaXamarin.Droid\EmaXamarin.Droid.csproj">
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Release" PreferredExecutionTarget="Android.HT23MW113842" />
+  <MonoDevelop.Ide.Workbench>
+    <Files>
+      <File FileName="EmaXamarin\EmaXamarin\Pages\PageFactory.cs" Line="30" Column="4" />
+      <File FileName="EmaXamarin\EmaXamarin\Pages\EmaWebView.cs" Line="1" Column="1" />
+      <File FileName="EmaXamarin\EmaXamarin\App.cs" Line="1" Column="1" />
+      <File FileName="EmaXamarin\EmaXamarin\Pages\SettingsPage.cs" Line="1" Column="1" />
+      <File FileName="EmaXamarin\EmaXamarin.Droid\AndroidFileRepository.cs" Line="1" Column="1" />
+      <File FileName="EmaXamarin\EmaXamarin.Droid\MainActivity.cs" Line="1" Column="1" />
+    </Files>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+</Properties>

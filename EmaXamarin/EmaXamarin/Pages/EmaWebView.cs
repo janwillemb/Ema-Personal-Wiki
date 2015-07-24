@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Text.RegularExpressions;
+using EmaXamarin.Api;
 using Xamarin.Forms;
 
 namespace EmaXamarin.Pages
@@ -10,14 +11,16 @@ namespace EmaXamarin.Pages
     /// </summary>
     internal class EmaWebView : WebView
     {
+        private readonly IExternalBrowserService _externalBrowserService;
         private static readonly Regex EmaUrlRegex = new Regex(@"ema:(.+)");
         private static readonly Regex CommandRegex = new Regex(@"emacmd:(.+)");
 
         public event EventHandler<RequestPageEventArgs> RequestPage;
         public event EventHandler RequestEdit;
 
-        public EmaWebView()
+        public EmaWebView(IExternalBrowserService externalBrowserService)
         {
+            _externalBrowserService = externalBrowserService;
             VerticalOptions = LayoutOptions.FillAndExpand;
             Navigating += WebViewOnNavigating;
         }
@@ -44,6 +47,13 @@ namespace EmaXamarin.Pages
                     }
                 }
             }
+
+            if (!args.Cancel)
+            {
+                args.Cancel = true;
+                //open external links in external browser
+                _externalBrowserService.OpenUrl(args.Url);
+            }
         }
 
         private void GoTo(string pageName)
@@ -59,12 +69,14 @@ namespace EmaXamarin.Pages
 
         protected virtual void OnRequestPage(RequestPageEventArgs e)
         {
-            RequestPage?.Invoke(this, e);
+			if (RequestPage != null) 
+            	RequestPage.Invoke(this, e);
         }
 
         protected virtual void OnRequestEdit(EventArgs e)
         {
-            RequestEdit?.Invoke(this, e);
+			if (RequestEdit != null)
+            	RequestEdit.Invoke(this, e);
         }
     }
 }

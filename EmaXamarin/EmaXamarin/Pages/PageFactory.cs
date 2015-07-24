@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using EmaXamarin.Api;
+﻿using EmaXamarin.Api;
 
 namespace EmaXamarin.Pages
 {
@@ -11,24 +6,29 @@ namespace EmaXamarin.Pages
     {
         private PageService _pageService;
         private IFileRepository _fileRepository;
-        private static PageFactory _instance;
+        private IExternalBrowserService _externalBrowserService;
+        private ApplicationEvents _applicationEvents;
 
-        private PageFactory() { }
-
-        public static void Initialize(PageService pageService, IFileRepository fileRepository)
+        private PageFactory()
         {
-            _instance = new PageFactory
+        }
+
+        public static void Initialize(PageService pageService, IFileRepository fileRepository, IExternalBrowserService externalBrowserService, ApplicationEvents applicationEvents)
+        {
+            Current = new PageFactory
             {
                 _pageService = pageService,
-                _fileRepository = fileRepository
+                _fileRepository = fileRepository,
+                _externalBrowserService = externalBrowserService,
+                _applicationEvents = applicationEvents
             };
         }
 
-        public static PageFactory Current => _instance;
+        public static PageFactory Current { get; private set; }
 
         public EmaWikiPage CreateEmaWikiPage()
         {
-            return new EmaWikiPage(_pageService);
+            return new EmaWikiPage(_pageService, _externalBrowserService);
         }
 
         public EditFilePage CreateEditFilePage(string pageName)
@@ -38,7 +38,7 @@ namespace EmaXamarin.Pages
 
         public SettingsPage CreateSettingsPage()
         {
-            return new SettingsPage(_fileRepository);
+            return new SettingsPage(_fileRepository, _externalBrowserService, _applicationEvents);
         }
     }
 }

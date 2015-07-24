@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using EmaXamarin.Api;
 using Xamarin.Forms;
@@ -9,6 +10,7 @@ namespace EmaXamarin.Pages
     public class EmaWikiPage : ContentPage
     {
         private readonly PageService _pageService;
+        private readonly IExternalBrowserService _externalBrowserService;
         private readonly EmaWebView _webView;
         private readonly Stack<string> _pageHistory = new Stack<string>();
         private readonly SearchBar _searchBar;
@@ -17,10 +19,10 @@ namespace EmaXamarin.Pages
         /// <summary>
         /// constructor; builds the page and controls.
         /// </summary>
-        /// <param name="pageService"></param>
-        public EmaWikiPage(PageService pageService)
+        public EmaWikiPage(PageService pageService, IExternalBrowserService externalBrowserService)
         {
             _pageService = pageService;
+            _externalBrowserService = externalBrowserService;
 
             _searchBar = new SearchBar
             {
@@ -30,7 +32,7 @@ namespace EmaXamarin.Pages
             _searchBar.SearchButtonPressed += SearchBarOnSearchButtonPressed;
 
             //prominent: the webview.
-            _webView = new EmaWebView();
+            _webView = new EmaWebView(externalBrowserService);
             _webView.RequestPage += (sender, args) => GoTo(args.PageName);
             _webView.RequestEdit += (sender, args) => EditCurrentPage();
 
@@ -46,7 +48,7 @@ namespace EmaXamarin.Pages
             ToolbarItems.Add(new ToolbarItem
             {
                 Text = "Home",
-                Command = new Command(GoHome),
+                Command = new Command(() => GoTo(PageService.DefaultPage)),
                 Order = ToolbarItemOrder.Primary
             });
             ToolbarItems.Add(new ToolbarItem
@@ -56,6 +58,11 @@ namespace EmaXamarin.Pages
                 {
                     _searchBar.Text = "";
                     _searchBar.IsVisible = !_searchBar.IsVisible;
+
+                    if (_searchBar.IsVisible)
+                    {
+                        _searchBar.Focus();
+                    }
                 })
             });
             ToolbarItems.Add(new ToolbarItem
@@ -70,7 +77,6 @@ namespace EmaXamarin.Pages
                 Command = new Command(Settings),
                 Order = ToolbarItemOrder.Secondary
             });
-
         }
 
         private void SearchBarOnSearchButtonPressed(object sender, EventArgs eventArgs)
@@ -92,11 +98,6 @@ namespace EmaXamarin.Pages
                     _webView.Eval("document.write('" + line.Replace("'", @"\'").Replace("\n", @"\n").Replace("\r", @"") + @"\n');");
                 }
             });
-        }
-
-        public void GoHome()
-        {
-            GoTo(PageService.DefaultPage);
         }
 
         private void EditCurrentPage()
@@ -139,9 +140,29 @@ namespace EmaXamarin.Pages
         {
             base.OnAppearing();
 
-            //refresh on re-entering this page.
-            var currentPage = _pageHistory.Pop();
-            GoTo(currentPage);
+            if (!_pageHistory.Any())
+            {
+                //application startup
+
+                //restart edit mode if the application was left in edit mode
+                var pageInEditMode = PersistedState.PageInEditMode;
+                if (!string.IsNullOrEmpty(pageInEditMode))
+                {
+                    GoTo(pageInEditMode);
+                    EditCurrentPage();
+                }
+                else
+                {
+                    //start normally, go to the home page
+                    GoTo(PageService.DefaultPage);
+                }
+            }
+            else
+            {
+                //refresh on re-entering this page.
+                var currentPage = _pageHistory.Pop();
+                GoTo(currentPage);
+            }
         }
 
         protected override bool OnBackButtonPressed()

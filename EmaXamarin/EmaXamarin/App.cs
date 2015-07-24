@@ -7,30 +7,29 @@ namespace EmaXamarin
 {
     public class App : Application
     {
-        private readonly EmaWikiPage _emaWikiPage;
-        
-        public App(IWikiStorage wikiStorage, IFileRepository fileRepository)
+        private readonly ApplicationEvents _applicationEvents;
+
+        public App(IWikiStorage wikiStorage, IFileRepository fileRepository, IExternalBrowserService externalBrowserService)
         {
             var service = new PageService(wikiStorage, new HtmlWrapper(fileRepository), new MarkdownImpl());
+            _applicationEvents = new ApplicationEvents();
 
             try
             {
                 fileRepository.StorageDirectory = PersistedState.CustomStorageDirectory;
             }
-            catch (IOException ex)
+            catch 
             {
                 //can't do much about it now.
             }
 
-            PageFactory.Initialize(service, fileRepository);
+            PageFactory.Initialize(service, fileRepository, externalBrowserService, _applicationEvents);
 
-            _emaWikiPage = PageFactory.Current.CreateEmaWikiPage();
-            MainPage = new NavigationPage(_emaWikiPage);
+            MainPage = new NavigationPage(PageFactory.Current.CreateEmaWikiPage());
         }
 
         protected override void OnStart()
         {
-            _emaWikiPage.GoHome();
         }
 
         protected override void OnSleep()
@@ -40,7 +39,7 @@ namespace EmaXamarin
 
         protected override void OnResume()
         {
-            // Handle when your app resumes
+            _applicationEvents.OnResumed();
         }
     }
 }

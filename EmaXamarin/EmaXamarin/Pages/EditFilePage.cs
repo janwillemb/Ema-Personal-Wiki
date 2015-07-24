@@ -16,6 +16,7 @@ namespace EmaXamarin.Pages
             _pageName = pageName;
             _pageService = pageService;
             _originalText = pageService.GetTextOfPage(pageName);
+            PersistedState.PageInEditMode = pageName;
 
             _editBox = new Editor
             {
@@ -24,11 +25,11 @@ namespace EmaXamarin.Pages
             };
             _editBox.TextChanged += (sender, args) => PersistedState.AutoSaveEditText = args.NewTextValue;
 
-            Content = new StackLayout
+            Content = new ScrollView
             {
-                Children =
+                Content = new StackLayout
                 {
-                    _editBox
+                    Children = {_editBox}
                 }
             };
 
@@ -50,12 +51,11 @@ namespace EmaXamarin.Pages
             });
         }
 
-        private async void Save()
+        private void Save()
         {
             _pageService.SavePage(_pageName, _editBox.Text);
 
-            PersistedState.AutoSaveEditText = string.Empty;
-            await Navigation.PopAsync();
+            ClosePage();
         }
 
         private void Clear()
@@ -65,11 +65,14 @@ namespace EmaXamarin.Pages
 
         private void Cancel()
         {
-            WhatToDoWithUnsavedChanges(Save, async () =>
-            {
-                PersistedState.AutoSaveEditText = string.Empty;
-                await Navigation.PopAsync();
-            });
+            WhatToDoWithUnsavedChanges(Save, ClosePage);
+        }
+
+        private async void ClosePage()
+        {
+            PersistedState.PageInEditMode = string.Empty;
+            PersistedState.AutoSaveEditText = string.Empty;
+            await Navigation.PopAsync();
         }
 
         private async void WhatToDoWithUnsavedChanges(Action saveAction, Action ignoreAction)
@@ -101,6 +104,7 @@ namespace EmaXamarin.Pages
             {
                 _editBox.Text = PersistedState.AutoSaveEditText;
             }
+            _editBox.Focus();
         }
 
         protected override bool OnBackButtonPressed()
