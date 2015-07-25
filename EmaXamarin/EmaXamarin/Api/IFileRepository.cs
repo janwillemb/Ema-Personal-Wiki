@@ -13,6 +13,6 @@ namespace EmaXamarin.Api
         Task<bool> MoveTo(string otherDirectory);
         Task<bool> CopyTo(string otherDirectory);
         IEnumerable<string> EnumerateFiles(string txt);
-        void MergeLocalStateInfoInto(CloudDir cloudWikiStateInfo);
+        void MergeLocalStateInfoInto(SyncedDirectory cloudWikiStateInfo);
     }
 }

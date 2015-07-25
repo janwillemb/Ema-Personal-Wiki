@@ -79,7 +79,12 @@ namespace EmaXamarin.Pages
             ToolbarItems.Add(new ToolbarItem
             {
                 Text = "Synchronize",
-                Command = new Command(() => new DropboxFiles(PersistedState.UserLogin, fileRepository).Sync())
+                Command = new Command(() =>
+                {
+                    var connection = new DropboxConnection(PersistedState.UserLogin);
+                    var synchronizer = new DropboxSynchronization(connection, fileRepository);
+                    synchronizer.DoSync();
+                })
             });
         }
 

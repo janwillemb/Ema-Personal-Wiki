@@ -46,10 +46,14 @@
     <Compile Include="Api\Markdown.cs" />
     <Compile Include="Api\PageService.cs" />
     <Compile Include="ApplicationEvents.cs" />
-    <Compile Include="CloudStorage\CloudDir.cs" />
-    <Compile Include="CloudStorage\CloudFile.cs" />
-    <Compile Include="CloudStorage\DropboxFiles.cs" />
+    <Compile Include="CloudStorage\DropboxConnection.cs" />
+    <Compile Include="CloudStorage\DropboxSynchronization.cs" />
+    <Compile Include="CloudStorage\SyncCommand.cs" />
+    <Compile Include="CloudStorage\SyncedDirectory.cs" />
+    <Compile Include="CloudStorage\SyncedFile.cs" />
+    <Compile Include="CloudStorage\DropboxSyncInfo.cs" />
     <Compile Include="CloudStorage\DropboxUserPermission.cs" />
+    <Compile Include="CloudStorage\SyncTimestamp.cs" />
     <Compile Include="Pages\EditFilePage.cs" />
     <Compile Include="Pages\EmaWebView.cs" />
     <Compile Include="Pages\EmaWikiPage.cs" />
