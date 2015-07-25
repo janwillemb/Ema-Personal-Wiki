@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using EmaXamarin.Api;
+using EmaXamarin.CloudStorage;
 using Xamarin.Forms;
 
 namespace EmaXamarin.Pages
@@ -10,7 +11,6 @@ namespace EmaXamarin.Pages
     public class EmaWikiPage : ContentPage
     {
         private readonly PageService _pageService;
-        private readonly IExternalBrowserService _externalBrowserService;
         private readonly EmaWebView _webView;
         private readonly Stack<string> _pageHistory = new Stack<string>();
         private readonly SearchBar _searchBar;
@@ -19,10 +19,9 @@ namespace EmaXamarin.Pages
         /// <summary>
         /// constructor; builds the page and controls.
         /// </summary>
-        public EmaWikiPage(PageService pageService, IExternalBrowserService externalBrowserService)
+        public EmaWikiPage(PageService pageService, IExternalBrowserService externalBrowserService, IFileRepository fileRepository)
         {
             _pageService = pageService;
-            _externalBrowserService = externalBrowserService;
 
             _searchBar = new SearchBar
             {
@@ -76,6 +75,11 @@ namespace EmaXamarin.Pages
                 Text = "Settings",
                 Command = new Command(Settings),
                 Order = ToolbarItemOrder.Secondary
+            });
+            ToolbarItems.Add(new ToolbarItem
+            {
+                Text = "Synchronize",
+                Command = new Command(() => new DropboxFiles(PersistedState.UserLogin, fileRepository).Sync())
             });
         }
 

@@ -13,6 +13,7 @@ namespace EmaXamarin.Pages
         private SwitchCell _customStorageSwitch;
         private EntryCell _customStorageDirectoryEntry;
         private DropboxUserPermission _dropboxUserPermission;
+        private SwitchCell _dropboxSwitch;
 
         public SettingsPage(IFileRepository fileRepository, IExternalBrowserService externalBrowserService, ApplicationEvents applicationEvents)
         {
@@ -21,11 +22,12 @@ namespace EmaXamarin.Pages
 
             InitializeStorageSettings(fileRepository);
 
-            var dropbox = new SwitchCell
+            _dropboxSwitch = new SwitchCell
             {
-                Text = "Use Dropbox"
+                Text = "Use Dropbox",
+                On = PersistedState.UserLogin != null && !string.IsNullOrEmpty(PersistedState.UserLogin.Secret)
             };
-            dropbox.OnChanged += (sender, args) =>
+            _dropboxSwitch.OnChanged += (sender, args) =>
             {
                 if (args.Value)
                 {
@@ -52,7 +54,7 @@ namespace EmaXamarin.Pages
                     },
                     new TableSection("Cloud sync")
                     {
-                        dropbox
+                        _dropboxSwitch
                     }
                 }
             };
@@ -64,7 +66,15 @@ namespace EmaXamarin.Pages
             if (_dropboxUserPermission != null)
             {
                 var userPermission = await _dropboxUserPermission.VerifiedUserPermission();
-                PersistedState.UserLogin = userPermission;
+                if (string.IsNullOrEmpty(userPermission.Token))
+                {
+                    _dropboxSwitch.On = false;
+                    await DisplayAlert("Not good", "Dropbox did not return a valid token.", "OK");
+                }
+                else
+                {
+                    PersistedState.UserLogin = userPermission;
+                }
             }
         }
 

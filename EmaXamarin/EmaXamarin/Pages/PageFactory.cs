@@ -28,7 +28,7 @@ namespace EmaXamarin.Pages
 
         public EmaWikiPage CreateEmaWikiPage()
         {
-            return new EmaWikiPage(_pageService, _externalBrowserService);
+            return new EmaWikiPage(_pageService, _externalBrowserService, _fileRepository);
         }
 
         public EditFilePage CreateEditFilePage(string pageName)

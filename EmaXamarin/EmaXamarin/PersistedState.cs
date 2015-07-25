@@ -25,8 +25,25 @@ namespace EmaXamarin
 
         public static UserLogin UserLogin
         {
-            get { return CrossSettings.Current.GetValueOrDefault("UserLogin", new UserLogin()); }
-            set { CrossSettings.Current.AddOrUpdateValue("UserLogin", value); }
+            get
+            {
+                var result = new UserLogin();
+                result.Token = GetValue("UserLogin.Token");
+                result.Secret = GetValue("UserLogin.Secret");
+                return result;
+            }
+            set
+            {
+                var token = default(string);
+                var secret = default(string);
+                if (value != null)
+                {
+                    token = value.Token;
+                    secret = value.Secret;
+                }
+                SetValue("UserLogin.Token", token);
+                SetValue("UserLogin.Secret", secret);
+            }
         }
 
         private static void SetValue(string key, string value)

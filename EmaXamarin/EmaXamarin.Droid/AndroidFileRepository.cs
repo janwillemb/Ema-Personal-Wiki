@@ -1,7 +1,10 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using EmaXamarin.Api;
+using EmaXamarin.CloudStorage;
 using Environment = Android.OS.Environment;
 
 namespace EmaXamarin.Droid
@@ -59,13 +62,10 @@ namespace EmaXamarin.Droid
             return Path.Combine(StorageDirectory, path);
         }
 
-		public string DefaultStorageDirectory 
-		{
-			get 
-			{
-				return Path.Combine (Environment.ExternalStorageDirectory.AbsolutePath, "PersonalWiki");
-			}
-		}
+        public string DefaultStorageDirectory
+        {
+            get { return Path.Combine(Environment.ExternalStorageDirectory.AbsolutePath, "PersonalWiki"); }
+        }
 
         public string StorageDirectory
         {
@@ -112,6 +112,57 @@ namespace EmaXamarin.Droid
             });
         }
 
+        public IEnumerable<string> EnumerateFiles(string searchPattern)
+        {
+            return Directory.EnumerateFiles(StorageDirectory, searchPattern);
+        }
+
+        public void MergeLocalStateInfoInto(CloudDir remoteWikiStateInfo)
+        {
+            MergeLocalStateInfoInto(new DirectoryInfo(StorageDirectory), remoteWikiStateInfo);
+        }
+
+        private void MergeLocalStateInfoInto(DirectoryInfo localDir, CloudDir cloudDirStateInfo)
+        {
+            //add local directories to cloudDirStateinfo that don't exist remotely
+            foreach (var localSubDirectory in localDir.GetDirectories())
+            {
+                var existsInRemoteDir = cloudDirStateInfo.SubDirectories.Any(x => x.Name.Equals(localSubDirectory.Name, StringComparison.OrdinalIgnoreCase));
+                if (!existsInRemoteDir)
+                {
+                    var newRemoteDir = new CloudDir { Name = localSubDirectory.Name };
+                    cloudDirStateInfo.SubDirectories.Add(newRemoteDir);
+                }
+            }
+
+            foreach (var cloudSubDir in cloudDirStateInfo.SubDirectories)
+            {
+                var localSubDirectory = new DirectoryInfo(Path.Combine(localDir.FullName, cloudSubDir.Name));
+                MergeLocalStateInfoInto(localSubDirectory, cloudSubDir);
+            }
+
+            //add local files to cloudDirState that don't exist remotely
+            foreach (var localFile in localDir.GetFiles())
+            {
+                var existsInRemoteDir = cloudDirStateInfo.Files.Any(x => x.Name.Equals(localFile.Name, StringComparison.OrdinalIgnoreCase));
+                if (!existsInRemoteDir)
+                {
+                    var newRemoteFile = new CloudFile {Name = localFile.Name};
+                    cloudDirStateInfo.Files.Add(newRemoteFile);
+                }
+            }
+            
+            foreach (var cloudFile in cloudDirStateInfo.Files)
+            {
+                var localFile = new FileInfo(Path.Combine(localDir.FullName, cloudFile.Name));
+                if (localFile.Exists)
+                {
+                    cloudFile.LocalModifiedDateTime = localFile.LastWriteTimeUtc;
+                    cloudFile.LocalSize = localFile.Length;
+                }
+            }
+        }
+
         public static void CopyFilesRecursively(DirectoryInfo source, DirectoryInfo target)
         {
             if (!target.Exists)
@@ -124,7 +175,5 @@ namespace EmaXamarin.Droid
             foreach (FileInfo file in source.GetFiles())
                 file.CopyTo(Path.Combine(target.FullName, file.Name), true);
         }
-
-
     }
 }

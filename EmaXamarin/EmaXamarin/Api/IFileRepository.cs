@@ -1,4 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
+using EmaXamarin.CloudStorage;
 
 namespace EmaXamarin.Api
 {
@@ -10,5 +12,7 @@ namespace EmaXamarin.Api
         void SaveText(string fileName, string text);
         Task<bool> MoveTo(string otherDirectory);
         Task<bool> CopyTo(string otherDirectory);
+        IEnumerable<string> EnumerateFiles(string txt);
+        void MergeLocalStateInfoInto(CloudDir cloudWikiStateInfo);
     }
 }

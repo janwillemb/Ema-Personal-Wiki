@@ -22,7 +22,7 @@ namespace EmaXamarin.Droid
 
             AlwaysShowMenuButton();
 
-            var app = new App(new AndroidWikiStorage(androidFileRepository), androidFileRepository, new ExternalBrowserService());
+            var app = new App(androidFileRepository, new ExternalBrowserService());
             LoadApplication(app);
         }
 

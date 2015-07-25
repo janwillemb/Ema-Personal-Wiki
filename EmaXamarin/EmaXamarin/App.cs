@@ -9,9 +9,9 @@ namespace EmaXamarin
     {
         private readonly ApplicationEvents _applicationEvents;
 
-        public App(IWikiStorage wikiStorage, IFileRepository fileRepository, IExternalBrowserService externalBrowserService)
+        public App(IFileRepository fileRepository, IExternalBrowserService externalBrowserService)
         {
-            var service = new PageService(wikiStorage, new HtmlWrapper(fileRepository), new MarkdownImpl());
+            var service = new PageService(new WikiStorage(fileRepository), new HtmlWrapper(fileRepository), new MarkdownImpl());
             _applicationEvents = new ApplicationEvents();
 
             try

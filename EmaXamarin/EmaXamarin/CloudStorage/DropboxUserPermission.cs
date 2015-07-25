@@ -25,5 +25,10 @@ namespace EmaXamarin.CloudStorage
             var userLogin = await _client.GetAccessToken();
             return userLogin;
         }
+
+        public static DropNetClient GetAuthenticatedClient(UserLogin login)
+        {
+            return new DropNetClient(AppKey, AppSecret, login.Token, login.Secret);
+        }
     }
 }
