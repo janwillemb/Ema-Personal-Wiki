@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using EmaXamarin.Api;
@@ -33,7 +32,7 @@ namespace EmaXamarin.Pages
             };
             _searchBar.SearchButtonPressed += SearchBarOnSearchButtonPressed;
 
-            _syncProgress = new SyncProgressContentView { IsVisible = false };
+            _syncProgress = new SyncProgressContentView {IsVisible = false};
 
             //prominent: the webview.
             _webView = new EmaWebView(externalBrowserService);
@@ -82,10 +81,12 @@ namespace EmaXamarin.Pages
                 Command = new Command(Settings),
                 Order = ToolbarItemOrder.Secondary
             });
+
             ToolbarItems.Add(new ToolbarItem
             {
                 Text = "Synchronize",
-                Command = new Command(async () => await Synchronize(fileRepository))
+                Command = new Command(async () => await Synchronize(fileRepository)),
+                Order = ToolbarItemOrder.Secondary
             });
         }
 
@@ -94,10 +95,18 @@ namespace EmaXamarin.Pages
             Exception exception = null;
             try
             {
-                _syncProgress.IsVisible = true;
-                var connection = new DropboxConnection(PersistedState.UserLogin);
-                var synchronizer = new DropboxSynchronization(connection, fileRepository, _syncProgress);
-                await synchronizer.DoSync();
+                var userLogin = PersistedState.UserLogin;
+                if (string.IsNullOrEmpty(userLogin.Token) || string.IsNullOrEmpty(userLogin.Secret))
+                {
+                    await DisplayAlert("Synchronization", "Please authenticate with Dropbox first (via settings)", "OK");
+                }
+                else
+                {
+                    _syncProgress.IsVisible = true;
+                    var connection = new DropboxConnection(userLogin);
+                    var synchronizer = new Synchronization(connection, fileRepository, _syncProgress);
+                    await synchronizer.DoSync();
+                }
             }
             catch (Exception ex)
             {
@@ -124,7 +133,7 @@ namespace EmaXamarin.Pages
 
         private void Search(string query)
         {
-            var src = new HtmlWebViewSource { Html = "" };
+            var src = new HtmlWebViewSource {Html = ""};
             _webView.Source = src;
 
             Task.Run(() =>
@@ -165,7 +174,7 @@ namespace EmaXamarin.Pages
             else
             {
                 Title = page;
-                var htmlSource = new HtmlWebViewSource { Html = _pageService.GetHtmlOfPage(page) };
+                var htmlSource = new HtmlWebViewSource {Html = _pageService.GetHtmlOfPage(page)};
                 _webView.Source = htmlSource;
             }
 

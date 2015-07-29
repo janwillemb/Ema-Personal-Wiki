@@ -12,6 +12,10 @@ namespace EmaXamarin.CloudStorage
         }
 
         public string Name { get; set; }
+        public string RemotePath { get; set; }
+        public string LocalPath { get; set; }
+        public bool LocalDeleted { get; set; }
+        public bool RemoteDeleted { get; set; }
         public SyncTimestamp CurrentSyncTimestamp { get; set; }
         public SyncTimestamp TimestampOnLastSync { get; set; }
         public SyncTimestamp TimestampAfterLastSync { get; set; }

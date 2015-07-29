@@ -14,8 +14,9 @@ namespace EmaXamarin.Api
         Task<bool> MoveTo(string otherDirectory);
         Task<bool> CopyTo(string otherDirectory);
         IEnumerable<string> EnumerateFiles(string txt);
-        void MergeLocalStateInfoInto(SyncedDirectory cloudWikiStateInfo);
-        StreamWriter OpenStreamWriter(string localPath);
+        StreamWriter OpenStreamWriter(string path);
         Stream OpenRead(string localPath);
+        SyncedDirectory GetLocalSyncState();
+        void DeleteFile(string path);
     }
 }

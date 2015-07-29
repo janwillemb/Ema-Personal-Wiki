@@ -10,7 +10,7 @@ namespace EmaXamarin
         {
             if (Resumed != null)
             {
-                Resumed?.Invoke(this, EventArgs.Empty);
+                Resumed.Invoke(this, EventArgs.Empty);
             }
         }
     }

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 using EmaXamarin.Api;
 using EmaXamarin.CloudStorage;
@@ -127,50 +126,37 @@ namespace EmaXamarin.Droid
             return File.OpenRead(Path.Combine(StorageDirectory, localPath));
         }
 
-        public void MergeLocalStateInfoInto(SyncedDirectory remoteWikiStateInfo)
+        public SyncedDirectory GetLocalSyncState()
         {
-            MergeLocalStateInfoInto(new DirectoryInfo(StorageDirectory), remoteWikiStateInfo);
+            return GetLocalSyncState(new DirectoryInfo(StorageDirectory));
         }
 
-        private void MergeLocalStateInfoInto(DirectoryInfo localDir, SyncedDirectory syncedDirectoryStateInfo)
+        public void DeleteFile(string path)
         {
-            //add local directories to cloudDirStateinfo that don't exist remotely
-            foreach (var localSubDirectory in localDir.GetDirectories())
-            {
-                var existsInRemoteDir = syncedDirectoryStateInfo.SubDirectories.Any(x => x.NameEquals(localSubDirectory.Name));
-                if (!existsInRemoteDir)
-                {
-                    var newRemoteDir = new SyncedDirectory { Name = localSubDirectory.Name };
-                    syncedDirectoryStateInfo.SubDirectories.Add(newRemoteDir);
-                }
-            }
-
-            foreach (var cloudSubDir in syncedDirectoryStateInfo.SubDirectories)
-            {
-                var localSubDirectory = new DirectoryInfo(Path.Combine(localDir.FullName, cloudSubDir.Name));
-                MergeLocalStateInfoInto(localSubDirectory, cloudSubDir);
-            }
-
-            //add local files to cloudDirState that don't exist remotely
-            foreach (var localFile in localDir.GetFiles())
-            {
-                var existsInRemoteDir = syncedDirectoryStateInfo.Files.Any(x => x.NameEquals(localFile.Name));
-                if (!existsInRemoteDir)
-                {
-                    var newRemoteFile = new SyncedFile { Name = localFile.Name };
-                    syncedDirectoryStateInfo.Files.Add(newRemoteFile);
-                }
-            }
-
-            foreach (var cloudFile in syncedDirectoryStateInfo.Files)
-            {
-                var localFile = new FileInfo(Path.Combine(localDir.FullName, cloudFile.Name));
-                if (localFile.Exists)
-                {
-                    cloudFile.CurrentSyncTimestamp.Local = localFile.LastWriteTimeUtc;
-                }
-            }
+            File.Delete(path);
         }
+
+        private SyncedDirectory GetLocalSyncState(DirectoryInfo dir)
+        {
+            var result = new SyncedDirectory { Name = dir.Name };
+            foreach (var subDir in dir.GetDirectories())
+            {
+                result.SubDirectories.Add(GetLocalSyncState(subDir));
+            }
+
+            foreach (var file in dir.GetFiles())
+            {
+                result.Files.Add(new SyncedFile
+                {
+                    Name = file.Name,
+                    LocalPath = file.FullName,
+                    CurrentSyncTimestamp = { Local = file.LastWriteTimeUtc }
+                });
+            }
+
+            return result;
+        }
+
 
         public static void CopyFilesRecursively(DirectoryInfo source, DirectoryInfo target)
         {

@@ -8,6 +8,8 @@ namespace EmaXamarin.CloudStorage
         public string Name { get; set; }
         public List<SyncedDirectory> SubDirectories { get; private set; }
         public List<SyncedFile> Files { get; private set; }
+        public bool RemoteDeleted { get; set; }
+        public bool LocalDeleted { get; set; }
 
         public SyncedDirectory()
         {
