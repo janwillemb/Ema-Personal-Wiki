@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using EmaXamarin.Api;
@@ -14,7 +15,9 @@ namespace EmaXamarin.Pages
         private readonly EmaWebView _webView;
         private readonly Stack<string> _pageHistory = new Stack<string>();
         private readonly SearchBar _searchBar;
+        private readonly SyncProgressContentView _syncProgress;
         private const string SearchPageName = "ema:searchpage?query=";
+        private static readonly Logging Logger = Logging.For<EmaWikiPage>();
 
         /// <summary>
         /// constructor; builds the page and controls.
@@ -30,6 +33,8 @@ namespace EmaXamarin.Pages
             };
             _searchBar.SearchButtonPressed += SearchBarOnSearchButtonPressed;
 
+            _syncProgress = new SyncProgressContentView { IsVisible = false };
+
             //prominent: the webview.
             _webView = new EmaWebView(externalBrowserService);
             _webView.RequestPage += (sender, args) => GoTo(args.PageName);
@@ -40,6 +45,7 @@ namespace EmaXamarin.Pages
                 Children =
                 {
                     _searchBar,
+                    _syncProgress,
                     _webView
                 }
             };
@@ -79,13 +85,34 @@ namespace EmaXamarin.Pages
             ToolbarItems.Add(new ToolbarItem
             {
                 Text = "Synchronize",
-                Command = new Command(() =>
-                {
-                    var connection = new DropboxConnection(PersistedState.UserLogin);
-                    var synchronizer = new DropboxSynchronization(connection, fileRepository);
-                    synchronizer.DoSync();
-                })
+                Command = new Command(async () => await Synchronize(fileRepository))
             });
+        }
+
+        private async Task Synchronize(IFileRepository fileRepository)
+        {
+            Exception exception = null;
+            try
+            {
+                _syncProgress.IsVisible = true;
+                var connection = new DropboxConnection(PersistedState.UserLogin);
+                var synchronizer = new DropboxSynchronization(connection, fileRepository, _syncProgress);
+                await synchronizer.DoSync();
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Error synchronizing", ex);
+                exception = ex;
+            }
+            finally
+            {
+                _syncProgress.IsVisible = false;
+            }
+
+            if (exception != null)
+            {
+                await DisplayAlert("Not good", "An error occurred while synchronizing: " + exception.Message, "OK");
+            }
         }
 
         private void SearchBarOnSearchButtonPressed(object sender, EventArgs eventArgs)
@@ -97,7 +124,7 @@ namespace EmaXamarin.Pages
 
         private void Search(string query)
         {
-            var src = new HtmlWebViewSource {Html = ""};
+            var src = new HtmlWebViewSource { Html = "" };
             _webView.Source = src;
 
             Task.Run(() =>
@@ -138,7 +165,7 @@ namespace EmaXamarin.Pages
             else
             {
                 Title = page;
-                var htmlSource = new HtmlWebViewSource {Html = _pageService.GetHtmlOfPage(page)};
+                var htmlSource = new HtmlWebViewSource { Html = _pageService.GetHtmlOfPage(page) };
                 _webView.Source = htmlSource;
             }
 

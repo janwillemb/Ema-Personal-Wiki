@@ -117,6 +117,16 @@ namespace EmaXamarin.Droid
             return Directory.EnumerateFiles(StorageDirectory, searchPattern);
         }
 
+        public StreamWriter OpenStreamWriter(string localPath)
+        {
+            return new StreamWriter(Path.Combine(StorageDirectory, localPath));
+        }
+
+        public Stream OpenRead(string localPath)
+        {
+            return File.OpenRead(Path.Combine(StorageDirectory, localPath));
+        }
+
         public void MergeLocalStateInfoInto(SyncedDirectory remoteWikiStateInfo)
         {
             MergeLocalStateInfoInto(new DirectoryInfo(StorageDirectory), remoteWikiStateInfo);

@@ -36,6 +36,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Api\IExternalBrowserService.cs" />
+    <Compile Include="Api\ISyncProgress.cs" />
     <Compile Include="Api\SearchAlgorithm.cs" />
     <Compile Include="App.cs" />
     <Compile Include="Api\HtmlWrapper.cs" />
@@ -54,12 +55,14 @@
     <Compile Include="CloudStorage\DropboxSyncInfo.cs" />
     <Compile Include="CloudStorage\DropboxUserPermission.cs" />
     <Compile Include="CloudStorage\SyncTimestamp.cs" />
+    <Compile Include="Logging.cs" />
     <Compile Include="Pages\EditFilePage.cs" />
     <Compile Include="Pages\EmaWebView.cs" />
     <Compile Include="Pages\EmaWikiPage.cs" />
     <Compile Include="Pages\PageFactory.cs" />
     <Compile Include="Pages\RequestPageEventArgs.cs" />
     <Compile Include="Pages\SettingsPage.cs" />
+    <Compile Include="Pages\SyncProgressContentView.cs" />
     <Compile Include="PersistedState.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Api\SearchResult.cs" />

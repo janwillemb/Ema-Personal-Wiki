@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Threading.Tasks;
 using DropNetRT;
 using DropNetRT.Models;
@@ -8,6 +9,7 @@ namespace EmaXamarin.CloudStorage
     public class DropboxConnection
     {
         private readonly DropNetClient _dropboxClient;
+        private const string RemoteWikiDirectoryName = "PersonalWiki";
 
         public DropboxConnection(UserLogin userLogin)
         {
@@ -51,17 +53,27 @@ namespace EmaXamarin.CloudStorage
             return result;
         }
 
-        public async Task<SyncedDirectory> GetRemoteSyncState(string remotePath)
+        public async Task<SyncedDirectory> GetRemoteSyncState()
         {
-            var metadata = await _dropboxClient.GetMetaData(remotePath);
+            var remotePath = "/" + RemoteWikiDirectoryName;
 
-            if (metadata.IsDeleted || !metadata.IsDirectory)
+            //check if the directory exists
+            Metadata wikiDir = null;
+            try
+            {
+                wikiDir = await _dropboxClient.GetMetaData(remotePath);
+            }
+            catch (Exception e)
+            {
+            }
+
+            if (wikiDir == null || wikiDir.IsDeleted || !wikiDir.IsDirectory)
             {
                 await _dropboxClient.CreateFolder(remotePath);
             }
 
             //get remote files info
-            return SniffRemoteDirectory(metadata);
+            return SniffRemoteDirectory(wikiDir);
         }
 
         public async Task Sync(SyncCommand syncCommand)
@@ -69,14 +81,24 @@ namespace EmaXamarin.CloudStorage
             if (syncCommand.Type == SyncType.Download)
             {
                 //TODO: save file to stream
+
                 var fileBytes = await _dropboxClient.GetFile(syncCommand.RemotePath);
-               
             }
             else if (syncCommand.Type == SyncType.Upload)
             {
                 //TODO: create stream from file
                 await _dropboxClient.Upload(syncCommand.LocalPath, syncCommand.Name, Stream.Null);
             }
+        }
+
+        public Task<byte[]> GetFile(string remotePath)
+        {
+            return _dropboxClient.GetFile(remotePath);
+        }
+
+        public Task Upload(string subDir, string name, Stream localFileStream)
+        {
+            return _dropboxClient.Upload(Path.Combine("/" + RemoteWikiDirectoryName, subDir), name, localFileStream);
         }
     }
 }

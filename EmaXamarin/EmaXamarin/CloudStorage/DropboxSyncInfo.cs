@@ -12,7 +12,7 @@ namespace EmaXamarin.CloudStorage
         private readonly IFileRepository _fileRepository;
         private SyncedDirectory _syncState;
         private const string SyncInfoFileName = ".EmaSyncInfo";
-        private const string RemoteWikiDirectoryName = "PersonalWiki_2";
+        private readonly string[] _excludedFiles = new[] { SyncInfoFileName };
 
         public DropboxSyncInfo(DropboxConnection connection, IFileRepository fileRepository)
         {
@@ -25,19 +25,50 @@ namespace EmaXamarin.CloudStorage
         /// </summary>
         public async Task Initialize()
         {
-            _syncState = await _connection.GetRemoteSyncState("/" + RemoteWikiDirectoryName);
-
-            //get local files info
-            _fileRepository.MergeLocalStateInfoInto(_syncState);
-
-            //get info from previous sync
-            MergePrevSyncInfoInto(_syncState);
+            _syncState = await BuildUpSyncState();
         }
 
-        public void Save()
+        public async Task<SyncedDirectory> BuildUpSyncState()
         {
+            var result = await _connection.GetRemoteSyncState();
+
+            //get local files info
+            _fileRepository.MergeLocalStateInfoInto(result);
+
+            //get info from previous sync
+            MergePrevSyncInfoInto(result);
+
+            return result;
+        }
+
+        public async Task SaveAfterSync()
+        {
+            //load the syncinfo again, with the new timestamps from the server, to save that information for the next sync
+            var syncStateAfterTheFact = await BuildUpSyncState();
+
+            CopyCurrentTimestampsToAfterLastSyncFrom(_syncState, syncStateAfterTheFact);
+
             var syncStateText = JsonConvert.SerializeObject(_syncState);
             _fileRepository.SaveText(SyncInfoFileName, syncStateText);
+        }
+
+        private void CopyCurrentTimestampsToAfterLastSyncFrom(SyncedDirectory inputForSync, SyncedDirectory syncStateAfterTheFact)
+        {
+            foreach (var inputDir in inputForSync.SubDirectories)
+            {
+                var dirAfterTheFact = syncStateAfterTheFact.SubDirectories.FirstOrDefault(x => x.NameEquals(inputDir.Name));
+                dirAfterTheFact = dirAfterTheFact ?? new SyncedDirectory(); //apparently removed during sync by another app or manually
+                CopyCurrentTimestampsToAfterLastSyncFrom(inputDir, dirAfterTheFact);
+            }
+
+            foreach (var inputFile in inputForSync.Files)
+            {
+                var fileAfterTheFact = syncStateAfterTheFact.Files.FirstOrDefault(x => x.NameEquals(inputFile.Name));
+                if (fileAfterTheFact != null)
+                {
+                    inputFile.TimestampAfterLastSync = fileAfterTheFact.CurrentSyncTimestamp;
+                }
+            }
         }
 
         /// <summary>
@@ -76,7 +107,10 @@ namespace EmaXamarin.CloudStorage
             foreach (var file in syncedDirectory.Files)
             {
                 var prevFile = prevSyncInfo.Files.FirstOrDefault(x => x.NameEquals(file.Name));
-                file.TimestampOnLastSync = prevFile.TimestampAfterLastSync;
+                if (prevFile != null)
+                {
+                    file.TimestampOnLastSync = prevFile.TimestampAfterLastSync;
+                }
             }
         }
 
@@ -96,14 +130,21 @@ namespace EmaXamarin.CloudStorage
 
             foreach (var file in dir.Files)
             {
-                //local changes go first: remote often has a versioning system in place
-                if (file.CurrentSyncTimestamp.Local > file.TimestampOnLastSync.Local)
+                if (_excludedFiles.Contains(file.Name))
                 {
-                    result.Add(new SyncCommand {LocalPath = file.Name, RemotePath = file.Name, Name = file.Name, Type = SyncType.Upload});
+                    continue;
                 }
-                else if (file.CurrentSyncTimestamp.Remote > file.TimestampOnLastSync.Remote)
+
+                //local changes go first: remote often has a versioning system in place
+                if (!file.TimestampOnLastSync.Local.HasValue || file.CurrentSyncTimestamp.Local > file.TimestampOnLastSync.Local)
                 {
-                    result.Add(new SyncCommand {LocalPath = file.Name, RemotePath = file.Name, Name = file.Name, Type = SyncType.Download});
+                    //TODO: subdirs
+                    result.Add(new SyncCommand { LocalPath = file.Name, RemotePath = file.Name, Name = file.Name, Type = SyncType.Upload });
+                }
+                else if (!file.TimestampOnLastSync.Remote.HasValue || file.CurrentSyncTimestamp.Remote > file.TimestampOnLastSync.Remote)
+                {
+                    //TODO: subdirs
+                    result.Add(new SyncCommand { LocalPath = file.Name, RemotePath = file.Name, Name = file.Name, Type = SyncType.Download });
                 }
             }
             return result;
