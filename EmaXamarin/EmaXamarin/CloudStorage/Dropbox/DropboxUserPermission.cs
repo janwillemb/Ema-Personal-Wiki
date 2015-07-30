@@ -3,7 +3,7 @@ using DropNetRT;
 using DropNetRT.Models;
 using EmaXamarin.Api;
 
-namespace EmaXamarin.CloudStorage
+namespace EmaXamarin.CloudStorage.Dropbox
 {
     public class DropboxUserPermission
     {

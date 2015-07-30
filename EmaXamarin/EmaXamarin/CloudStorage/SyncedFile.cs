@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 
 namespace EmaXamarin.CloudStorage
 {
@@ -13,8 +14,22 @@ namespace EmaXamarin.CloudStorage
 
         public string Name { get; set; }
         public string RemotePath { get; set; }
-        public string LocalPath { get; set; }
-        public bool LocalDeleted { get; set; }
+
+        public string LocalPath
+        {
+            get
+            {
+                if (LocalDirectory == null)
+                {
+                    return null;
+                }
+                return Path.Combine(LocalDirectory, Name);
+            }
+        }
+
+        public string LocalDirectory { get; set; }
+        public bool LocallyAbsent { get; set; }
+        public bool LocallyDeleted { get; set; }
         public bool RemoteDeleted { get; set; }
         public SyncTimestamp CurrentSyncTimestamp { get; set; }
         public SyncTimestamp TimestampOnLastSync { get; set; }

@@ -23,10 +23,7 @@ namespace EmaXamarin.Droid
 
             try
             {
-                if (!Directory.Exists(StorageDirectory))
-                {
-                    Directory.CreateDirectory(StorageDirectory);
-                }
+                CreateDirectory(StorageDirectory);
                 _isInitialized = true;
                 return true;
             }
@@ -136,20 +133,28 @@ namespace EmaXamarin.Droid
             File.Delete(path);
         }
 
+        public void CreateDirectory(string dir)
+        {
+            if (!Directory.Exists(dir))
+            {
+                Directory.CreateDirectory(dir);
+            }
+        }
+
         private SyncedDirectory GetLocalSyncState(DirectoryInfo dir)
         {
             var result = new SyncedDirectory { Name = dir.Name };
             foreach (var subDir in dir.GetDirectories())
             {
-                result.SubDirectories.Add(GetLocalSyncState(subDir));
+                result.AddDir(GetLocalSyncState(subDir));
             }
 
             foreach (var file in dir.GetFiles())
             {
-                result.Files.Add(new SyncedFile
+                result.AddFile(new SyncedFile
                 {
                     Name = file.Name,
-                    LocalPath = file.FullName,
+                    LocalDirectory = file.DirectoryName,
                     CurrentSyncTimestamp = { Local = file.LastWriteTimeUtc }
                 });
             }

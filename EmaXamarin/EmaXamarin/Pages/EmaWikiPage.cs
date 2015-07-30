@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using EmaXamarin.Api;
 using EmaXamarin.CloudStorage;
+using EmaXamarin.CloudStorage.Dropbox;
 using Xamarin.Forms;
 
 namespace EmaXamarin.Pages

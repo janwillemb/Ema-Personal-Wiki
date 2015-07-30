@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using EmaXamarin.Api;
@@ -33,42 +34,40 @@ namespace EmaXamarin.CloudStorage
             var result = await _connection.GetRemoteSyncState();
 
             //get local files info and merge it into our result
-            var localState = _fileRepository.GetLocalSyncState();
-            MergeLocalDirInfoIntoSyncState(localState, result);
+            result.CopyInfoFromLocalState(_fileRepository.GetLocalSyncState());
 
             //get info from previous sync and merge into our result
-            var previousSyncInfo = GetPrevSyncInfo();
-            MergePrevSyncInfoIntoSyncState(previousSyncInfo, result);
+            result.CopyInfoFromPreviousSync(GetPrevSyncInfo());
 
-            ReevaluateLocallyDeletedFilesAndDirs(result);
+            EvaluateLocallyAbsentFilesAndDirs(result);
 
             return result;
         }
 
-        private void ReevaluateLocallyDeletedFilesAndDirs(SyncedDirectory syncedDirectory)
+        private void EvaluateLocallyAbsentFilesAndDirs(SyncedDirectory syncedDirectory)
         {
             //evaluate the files first (needed to evaluate the dir)
-            foreach (var syncedFile in syncedDirectory.Files.Where(x => x.LocalDeleted).ToArray())
+            foreach (var syncedFile in syncedDirectory.Files.Where(x => x.LocallyAbsent && !x.RemoteDeleted).ToArray())
             {
-                if (!syncedFile.TimestampOnLastSync.Local.HasValue)
+                //if this file was present on the last sync, it's really deleted, otherwise it is new on the remote side
+                syncedFile.LocallyDeleted = syncedFile.TimestampOnLastSync.Local.HasValue;
+
+                if (!syncedFile.LocallyDeleted)
                 {
-                    //this file wasn't present on the last sync, so it isn't really deleted, but new on the remote side
-                    syncedFile.LocalDeleted = false;
+                    //remote new, construct local directory
+                    syncedFile.LocalDirectory = Path.Combine(_fileRepository.StorageDirectory, syncedDirectory.GetRelativePath());
                 }
             }
 
-            if (syncedDirectory.LocalDeleted)
+            if (syncedDirectory.LocallyAbsent)
             {
-                if (syncedDirectory.Files.Any(x => !x.LocalDeleted))
-                {
-                    //if it has non-deleted files in it, then this is a new dir and not a deleted dir
-                    syncedDirectory.LocalDeleted = false;
-                }
+                var shouldLive = syncedDirectory.Files.Any(x => !x.LocallyDeleted);
+                syncedDirectory.LocallyDeleted = !shouldLive;
             }
 
             foreach (var subDir in syncedDirectory.SubDirectories)
             {
-                ReevaluateLocallyDeletedFilesAndDirs(subDir);
+                EvaluateLocallyAbsentFilesAndDirs(subDir);
             }
         }
 
@@ -133,87 +132,6 @@ namespace EmaXamarin.CloudStorage
             return prevSyncInfo;
         }
 
-        /// <summary>
-        /// merge info from previous sync into the current state (mainly 'last sync datetime')
-        /// </summary>
-        private void MergePrevSyncInfoIntoSyncState(SyncedDirectory prevSyncInfo, SyncedDirectory syncedDirectory)
-        {
-            foreach (var subDir in syncedDirectory.SubDirectories)
-            {
-                var prevSubDir = prevSyncInfo.SubDirectories.FirstOrDefault(x => x.NameEquals(subDir.Name));
-                prevSubDir = prevSubDir ?? new SyncedDirectory();
-                MergePrevSyncInfoIntoSyncState(subDir, prevSubDir);
-            }
-
-            foreach (var file in syncedDirectory.Files)
-            {
-                var prevFile = prevSyncInfo.Files.FirstOrDefault(x => x.NameEquals(file.Name));
-                if (prevFile != null)
-                {
-                    file.TimestampOnLastSync = prevFile.TimestampAfterLastSync;
-                }
-            }
-        }
-
-       /// <summary>
-        /// merge state from local directory into the current state.
-        /// </summary>
-        private void MergeLocalDirInfoIntoSyncState(SyncedDirectory localDirInfo, SyncedDirectory syncState)
-        {
-            //add local directories to cloudDirStateinfo that don't exist remotely
-            foreach (var localSubDirectory in localDirInfo.SubDirectories)
-            {
-                var existsInRemoteDir = syncState.SubDirectories.Any(x => x.NameEquals(localSubDirectory.Name));
-                if (!existsInRemoteDir)
-                {
-                    var newRemoteDir = new SyncedDirectory {Name = localSubDirectory.Name};
-                    syncState.SubDirectories.Add(newRemoteDir);
-                }
-            }
-
-            foreach (var subDirSyncState in syncState.SubDirectories)
-            {
-                var localSubDirectory = localDirInfo.SubDirectories.FirstOrDefault(x => x.NameEquals(subDirSyncState.Name));
-                if (localSubDirectory == null)
-                {
-                    //may be deleted locally, but could also be new on the remote side.
-                    //we don't know yet, this will be re-evaluated later (in this class)
-                    subDirSyncState.LocalDeleted = true;
-                    localSubDirectory = new SyncedDirectory();
-                }
-
-                MergeLocalDirInfoIntoSyncState(localSubDirectory, subDirSyncState);
-            }
-
-            //add local files to cloudDirState that don't exist remotely
-            foreach (var localFile in localDirInfo.Files)
-            {
-                var existsInRemoteDir = syncState.Files.Any(x => x.NameEquals(localFile.Name));
-                if (!existsInRemoteDir)
-                {
-                    var newRemoteFile = new SyncedFile {Name = localFile.Name};
-                    syncState.Files.Add(newRemoteFile);
-                }
-            }
-
-            foreach (var fileSyncState in syncState.Files)
-            {
-                var localFile = localDirInfo.Files.FirstOrDefault(x => x.NameEquals(fileSyncState.Name));
-
-                if (localFile == null)
-                {
-                    //may be deleted locally, but could also be new on the remote side.
-                    //we don't know yet, this will be re-evaluated later (in this class)
-                    fileSyncState.LocalDeleted = true;
-                }
-                else
-                {
-                    fileSyncState.CurrentSyncTimestamp.Local = localFile.CurrentSyncTimestamp.Local;
-                    fileSyncState.LocalPath = localFile.LocalPath;
-                }
-            }
-        }
-
 
         /// <summary>
         /// evaluate syncstate and destill sync commands 
@@ -241,9 +159,12 @@ namespace EmaXamarin.CloudStorage
                     continue;
                 }
 
+                var isNewLocally = !file.LocallyAbsent && !file.TimestampOnLastSync.Local.HasValue;
+                var isNewRemote = file.LocallyAbsent && !file.TimestampOnLastSync.Remote.HasValue;
+
                 //local changes go first: remote often has a versioning system in place
 
-                if (file.LocalDeleted)
+                if (file.LocallyDeleted)
                 {
                     if (!file.RemoteDeleted)
                     {
@@ -257,11 +178,11 @@ namespace EmaXamarin.CloudStorage
                         result.Add(SyncCommand.DeleteLocal(file));
                     }
                 }
-                else if (!file.TimestampOnLastSync.Local.HasValue || file.CurrentSyncTimestamp.Local > file.TimestampOnLastSync.Local)
+                else if (isNewLocally || file.CurrentSyncTimestamp.Local > file.TimestampOnLastSync.Local)
                 {
                     result.Add(SyncCommand.Upload(file));
                 }
-                else if (!file.TimestampOnLastSync.Remote.HasValue || file.CurrentSyncTimestamp.Remote > file.TimestampOnLastSync.Remote)
+                else if (isNewRemote || file.CurrentSyncTimestamp.Remote > file.TimestampOnLastSync.Remote)
                 {
                     result.Add(SyncCommand.Download(file));
                 }

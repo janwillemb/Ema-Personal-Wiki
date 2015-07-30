@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using EmaXamarin.Api;
 
@@ -35,27 +36,26 @@ namespace EmaXamarin.CloudStorage
                 switch (syncCommand.Type)
                 {
                     case SyncType.Download:
-                        using (StreamWriter localFileWriter = _fileRepository.OpenStreamWriter(syncCommand.LocalPath))
-                        {
-                            var fileBytes = await _connection.GetFile(syncCommand.RemotePath);
-                            localFileWriter.Write(fileBytes);
-                        }
+                        _fileRepository.CreateDirectory(syncCommand.File.LocalDirectory);
+                        var fileBytes = await _connection.GetFile(syncCommand.File.RemotePath);
+                        var contents = Encoding.UTF8.GetString(fileBytes, 0, fileBytes.Length);
+                        _fileRepository.SaveText(syncCommand.File.LocalPath, contents);
                         break;
 
                     case SyncType.Upload:
-                        using (Stream localFileStream = _fileRepository.OpenRead(syncCommand.LocalPath))
+                        using (Stream localFileStream = _fileRepository.OpenRead(syncCommand.File.LocalPath))
                         {
-                            //TODO: subdirectories 
-                            await _connection.Upload("", syncCommand.Name, localFileStream);
+                            var subDir = syncCommand.File.LocalDirectory.Substring(_fileRepository.StorageDirectory.Length);
+                            await _connection.Upload(subDir, syncCommand.File.Name, localFileStream);
                         }
                         break;
 
                     case SyncType.DeleteLocal:
-                        _fileRepository.DeleteFile(syncCommand.LocalPath);
+                        _fileRepository.DeleteFile(syncCommand.File.LocalPath);
                         break;
 
                     case SyncType.DeleteRemote:
-                        await _connection.DeleteFile(syncCommand.RemotePath);
+                        await _connection.DeleteFile(syncCommand.File.RemotePath);
                         break;
                 }
             }

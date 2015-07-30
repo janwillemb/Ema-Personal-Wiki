@@ -2,6 +2,7 @@
 using System.IO;
 using EmaXamarin.Api;
 using EmaXamarin.CloudStorage;
+using EmaXamarin.CloudStorage.Dropbox;
 using Xamarin.Forms;
 
 namespace EmaXamarin.Pages

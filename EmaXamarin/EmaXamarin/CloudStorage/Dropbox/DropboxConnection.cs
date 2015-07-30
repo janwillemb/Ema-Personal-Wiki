@@ -5,7 +5,7 @@ using DropNetRT;
 using DropNetRT.Exceptions;
 using DropNetRT.Models;
 
-namespace EmaXamarin.CloudStorage
+namespace EmaXamarin.CloudStorage.Dropbox
 {
     public class DropboxConnection : ICloudStorageConnection
     {
@@ -20,7 +20,7 @@ namespace EmaXamarin.CloudStorage
         /// <summary>
         /// get all information for a remote directory from the Dropbox metadata
         /// </summary>
-        private SyncedDirectory SniffRemoteDirectory(Metadata remoteDirectory)
+        private async Task<SyncedDirectory> SniffRemoteDirectory(Metadata remoteDirectory)
         {
             var result = new SyncedDirectory
             {
@@ -32,11 +32,14 @@ namespace EmaXamarin.CloudStorage
             {
                 if (child.IsDirectory)
                 {
-                    result.SubDirectories.Add(SniffRemoteDirectory(child));
+                    //contents are not downloaded recursively for subdirs, do it now
+                    var childFromDropbox = await _dropboxClient.GetMetaDataWithDeleted(child.Path);
+
+                    result.AddDir(await SniffRemoteDirectory(childFromDropbox));
                 }
                 else
                 {
-                    result.Files.Add(SniffRemoteFile(child));
+                    result.AddFile(SniffRemoteFile(child));
                 }
             }
 
@@ -60,18 +63,33 @@ namespace EmaXamarin.CloudStorage
             return result;
         }
 
+        private string GetRemotePath(string subDir = null)
+        {
+            var wikiDir = "/" + RemoteWikiDirectoryName;
+            if (subDir != null)
+            {
+                if (subDir.StartsWith(@"\"))
+                {
+                    subDir = subDir.Substring(1);
+                }
+                if (!subDir.StartsWith(@"/"))
+                {
+                    subDir = "/" + subDir;
+                }
+                return wikiDir + subDir;
+            }
+            return wikiDir;
+        }
+
         public async Task<SyncedDirectory> GetRemoteSyncState()
         {
             try
             {
-
-                var remotePath = "/" + RemoteWikiDirectoryName;
-
                 //check if the directory exists
                 Metadata wikiDir = null;
                 try
                 {
-                    wikiDir = await _dropboxClient.GetMetaDataWithDeleted(remotePath);
+                    wikiDir = await _dropboxClient.GetMetaDataWithDeleted(GetRemotePath());
                 }
                 catch
                 {
@@ -79,11 +97,12 @@ namespace EmaXamarin.CloudStorage
 
                 if (wikiDir == null || wikiDir.IsDeleted || !wikiDir.IsDirectory)
                 {
-                    await _dropboxClient.CreateFolder(remotePath);
+                    await _dropboxClient.CreateFolder(GetRemotePath());
                 }
 
                 //get remote files info
-                return SniffRemoteDirectory(wikiDir);
+                var result = await SniffRemoteDirectory(wikiDir);
+                return result;
             }
             catch (DropboxException ex)
             {
@@ -115,7 +134,7 @@ namespace EmaXamarin.CloudStorage
         {
             try
             {
-                return _dropboxClient.Upload(Path.Combine("/" + RemoteWikiDirectoryName, subDir), name, localFileStream);
+                return _dropboxClient.Upload(GetRemotePath(subDir), name, localFileStream);
             }
             catch (DropboxException ex)
             {
