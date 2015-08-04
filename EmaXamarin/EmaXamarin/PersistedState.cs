@@ -46,6 +46,21 @@ namespace EmaXamarin
             }
         }
 
+        public static int SyncInterval
+        {
+            get
+            {
+                int result;
+                if (!int.TryParse(GetValue("SyncInterval"), out result))
+                {
+                    //10 minutes = default
+                    return 10;
+                }
+                return result;
+            }
+            set { SetValue("SyncInterval", value.ToString()); }
+        }
+
         private static void SetValue(string key, string value)
         {
             CrossSettings.Current.AddOrUpdateValue(key, value);

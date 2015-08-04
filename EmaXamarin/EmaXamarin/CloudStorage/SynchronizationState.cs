@@ -11,14 +11,15 @@ namespace EmaXamarin.CloudStorage
     {
         private readonly ICloudStorageConnection _connection;
         private readonly IFileRepository _fileRepository;
+        private readonly string _syncName;
         private SyncedDirectory _syncState;
         private const string SyncInfoFileName = ".EmaSyncInfo";
-        private readonly string[] _excludedFiles = {SyncInfoFileName};
 
-        public SynchronizationState(ICloudStorageConnection connection, IFileRepository fileRepository)
+        public SynchronizationState(ICloudStorageConnection connection, IFileRepository fileRepository, string syncName)
         {
             _connection = connection;
             _fileRepository = fileRepository;
+            _syncName = syncName;
         }
 
         /// <summary>
@@ -83,7 +84,7 @@ namespace EmaXamarin.CloudStorage
             CopyCurrentTimestampsToAfterLastSyncFrom(_syncState, syncStateAfterTheFact);
 
             var syncStateText = JsonConvert.SerializeObject(_syncState);
-            _fileRepository.SaveText(SyncInfoFileName, syncStateText);
+            _fileRepository.SaveText(GetSyncInfoFileName(), syncStateText);
         }
 
         /// <summary>
@@ -110,12 +111,17 @@ namespace EmaXamarin.CloudStorage
             }
         }
 
+        private string GetSyncInfoFileName()
+        {
+            return SyncInfoFileName + "_" + _syncName;
+        }
+
         /// <summary>
         /// restore sync info from previous sync from disk
         /// </summary>
         private SyncedDirectory GetPrevSyncInfo()
         {
-            var prevSyncInfoText = _fileRepository.GetText(SyncInfoFileName);
+            var prevSyncInfoText = _fileRepository.GetText(GetSyncInfoFileName());
             var prevSyncInfo = new SyncedDirectory();
             if (!string.IsNullOrEmpty(prevSyncInfoText))
             {
@@ -154,7 +160,7 @@ namespace EmaXamarin.CloudStorage
 
             foreach (var file in dir.Files)
             {
-                if (_excludedFiles.Contains(file.Name))
+                if (GetSyncInfoFileName().Equals(file.Name))
                 {
                     continue;
                 }

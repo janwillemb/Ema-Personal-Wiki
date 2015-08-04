@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using EmaXamarin.Api;
+using EmaXamarin.CloudStorage;
 using EmaXamarin.Pages;
 using Xamarin.Forms;
 
@@ -24,6 +25,9 @@ namespace EmaXamarin
             }
 
             PageFactory.Initialize(service, fileRepository, externalBrowserService, _applicationEvents);
+
+            SyncBootstrapper.RefreshFromSyncInterval();
+            SyncBootstrapper.RefreshForDropbox(fileRepository);
 
             MainPage = new NavigationPage(PageFactory.Current.CreateEmaWikiPage());
         }

@@ -24,6 +24,11 @@ namespace EmaXamarin.Pages
             };
         }
 
+        public void OnSyncStart()
+        {
+            IsVisible = true;
+        }
+
         public async void ReportProgress(int totalSteps, int currentStep, string label)
         {
             var fraction = (double) currentStep/Math.Max(1, totalSteps);
@@ -31,6 +36,11 @@ namespace EmaXamarin.Pages
 
             _progressLabel.Text = label;
             await _progressbar.ProgressTo(progress, 100, Easing.Linear);
+        }
+
+        public void OnSyncFinished()
+        {
+            IsVisible = false;
         }
     }
 }

@@ -9,9 +9,8 @@ namespace EmaXamarin
         public void OnResumed()
         {
             if (Resumed != null)
-            {
                 Resumed.Invoke(this, EventArgs.Empty);
-            }
         }
+
     }
 }

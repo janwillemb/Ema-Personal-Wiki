@@ -1,5 +1,7 @@
-﻿- spaces in filenames on android
+﻿- is everything utf-8?
+- spaces in filenames on android
 - update windows wiki with portable library
 - website
 - sync with other cloud services
 - icons
+- apk size

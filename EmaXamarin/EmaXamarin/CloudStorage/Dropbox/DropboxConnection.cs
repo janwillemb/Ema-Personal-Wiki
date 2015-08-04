@@ -16,7 +16,7 @@ namespace EmaXamarin.CloudStorage.Dropbox
         {
             _dropboxClient = DropboxUserPermission.GetAuthenticatedClient(userLogin);
         }
-
+        
         /// <summary>
         /// get all information for a remote directory from the Dropbox metadata
         /// </summary>

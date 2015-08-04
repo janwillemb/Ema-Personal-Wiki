@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using EmaXamarin.Api;
 using EmaXamarin.CloudStorage;
-using EmaXamarin.CloudStorage.Dropbox;
 using Xamarin.Forms;
 
 namespace EmaXamarin.Pages
@@ -15,7 +14,6 @@ namespace EmaXamarin.Pages
         private readonly EmaWebView _webView;
         private readonly Stack<string> _pageHistory = new Stack<string>();
         private readonly SearchBar _searchBar;
-        private readonly SyncProgressContentView _syncProgress;
         private const string SearchPageName = "ema:searchpage?query=";
         private static readonly Logging Logger = Logging.For<EmaWikiPage>();
 
@@ -33,7 +31,8 @@ namespace EmaXamarin.Pages
             };
             _searchBar.SearchButtonPressed += SearchBarOnSearchButtonPressed;
 
-            _syncProgress = new SyncProgressContentView {IsVisible = false};
+            var syncProgress = new SyncProgressContentView {IsVisible = false};
+            SyncBootstrapper.ShowSyncProgressIn(syncProgress);
 
             //prominent: the webview.
             _webView = new EmaWebView(externalBrowserService);
@@ -45,7 +44,7 @@ namespace EmaXamarin.Pages
                 Children =
                 {
                     _searchBar,
-                    _syncProgress,
+                    syncProgress,
                     _webView
                 }
             };
@@ -53,12 +52,14 @@ namespace EmaXamarin.Pages
             ToolbarItems.Add(new ToolbarItem
             {
                 Text = "Home",
+                Icon = "ic_home_white_24dp.png",
                 Command = new Command(() => GoTo(PageService.DefaultPage)),
                 Order = ToolbarItemOrder.Primary
             });
             ToolbarItems.Add(new ToolbarItem
             {
                 Text = "Search",
+                Icon = "ic_search_white_24dp.png",
                 Command = new Command(() =>
                 {
                     _searchBar.Text = "";
@@ -73,6 +74,7 @@ namespace EmaXamarin.Pages
             ToolbarItems.Add(new ToolbarItem
             {
                 Text = "Edit",
+                Icon = "ic_menu_edit.png",
                 Command = new Command(EditCurrentPage),
                 Order = ToolbarItemOrder.Primary
             });
@@ -85,6 +87,7 @@ namespace EmaXamarin.Pages
 
             ToolbarItems.Add(new ToolbarItem
             {
+                Icon = "ic_autorenew_white_24dp.png",
                 Text = "Synchronize",
                 Command = new Command(async () => await Synchronize(fileRepository)),
                 Order = ToolbarItemOrder.Secondary
@@ -93,35 +96,18 @@ namespace EmaXamarin.Pages
 
         private async Task Synchronize(IFileRepository fileRepository)
         {
-            Exception exception = null;
-            try
+            if (!SyncBootstrapper.CanSync)
             {
-                var userLogin = PersistedState.UserLogin;
-                if (string.IsNullOrEmpty(userLogin.Token) || string.IsNullOrEmpty(userLogin.Secret))
+                await DisplayAlert("Synchronization", "Please configure the synchronizationoptions first (via settings)", "OK");
+            }
+            else
+            {
+                await SyncBootstrapper.StartNow();
+                var ex = SyncBootstrapper.ConsumeSyncException();
+                if (ex != null)
                 {
-                    await DisplayAlert("Synchronization", "Please authenticate with Dropbox first (via settings)", "OK");
+                    await DisplayAlert("Not good", "An error occurred while synchronizing: " + ex.Message, "OK");
                 }
-                else
-                {
-                    _syncProgress.IsVisible = true;
-                    var connection = new DropboxConnection(userLogin);
-                    var synchronizer = new Synchronization(connection, fileRepository, _syncProgress);
-                    await synchronizer.DoSync();
-                }
-            }
-            catch (Exception ex)
-            {
-                Logger.Error("Error synchronizing", ex);
-                exception = ex;
-            }
-            finally
-            {
-                _syncProgress.IsVisible = false;
-            }
-
-            if (exception != null)
-            {
-                await DisplayAlert("Not good", "An error occurred while synchronizing: " + exception.Message, "OK");
             }
         }
 

@@ -10,27 +10,33 @@ namespace EmaXamarin.CloudStorage
     {
         private readonly ICloudStorageConnection _connection;
         private readonly IFileRepository _fileRepository;
-        private readonly ISyncProgress _syncProgress;
         private static readonly Logging Logger = Logging.For<Synchronization>();
 
-        public Synchronization(ICloudStorageConnection connection, IFileRepository fileRepository, ISyncProgress syncProgress)
+        public Synchronization(ICloudStorageConnection connection, IFileRepository fileRepository)
         {
             _connection = connection;
             _fileRepository = fileRepository;
-            _syncProgress = syncProgress;
         }
 
-        public async Task DoSync()
+        public string Name { get; set; }
+
+        private void ReportProgress(ISyncProgress syncProgress, int totalStepts, int currentStep, string label)
         {
-            _syncProgress.ReportProgress(100, 2, "Constructing sync info...");
-            var syncInfo = new SynchronizationState(_connection, _fileRepository);
+            if (syncProgress != null)
+                syncProgress.ReportProgress(totalStepts, currentStep, label);
+        }
+
+        public async Task DoSync(ISyncProgress syncProgress)
+        {
+            ReportProgress(syncProgress, 100, 1, "Constructing sync info...");
+            var syncInfo = new SynchronizationState(_connection, _fileRepository, Name);
             await syncInfo.Initialize();
 
             var commands = syncInfo.CreateSyncCommands().ToArray();
-            int num = 0;
+            int num = 2;
             foreach (var syncCommand in commands)
             {
-                _syncProgress.ReportProgress(commands.Length + 1, num++, syncCommand + " (" + num + "/" + commands.Length + ")");
+                ReportProgress(syncProgress, commands.Length + 2, num++, syncCommand + " (" + num + "/" + commands.Length + ")");
 
                 Logger.Info(syncCommand.ToString());
                 switch (syncCommand.Type)
@@ -60,7 +66,7 @@ namespace EmaXamarin.CloudStorage
                 }
             }
 
-            _syncProgress.ReportProgress(100, 99, "Saving sync info...");
+            ReportProgress(syncProgress, 100, 99, "Saving sync info...");
 
             //save the timestamps for use in the next syncinfo
             await syncInfo.SaveAfterSync();

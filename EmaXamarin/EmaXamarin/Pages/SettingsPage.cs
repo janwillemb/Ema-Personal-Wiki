@@ -18,11 +18,73 @@ namespace EmaXamarin.Pages
 
         public SettingsPage(IFileRepository fileRepository, IExternalBrowserService externalBrowserService, ApplicationEvents applicationEvents)
         {
+            Title = "Settings";
             _fileRepository = fileRepository;
             _applicationEvents = applicationEvents;
 
             InitializeStorageSettings(fileRepository);
+            InitializeDropboxSettings(externalBrowserService, applicationEvents);
 
+            var autoSyncValue = new EntryCell
+            {
+                Label = "Interval in minutes",
+                IsEnabled = PersistedState.SyncInterval > 0,
+                Text = PersistedState.SyncInterval > 0 ? PersistedState.SyncInterval.ToString() : string.Empty
+            };
+            var autoSyncSwitch = new SwitchCell
+            {
+                Text = "Auto sync",
+                On = PersistedState.SyncInterval > 0
+            };
+            autoSyncSwitch.OnChanged += (sender, args) =>
+            {
+                if (args.Value)
+                {
+                    autoSyncValue.Text = "10";
+                    autoSyncValue.IsEnabled = true;
+                    SetSyncInterval(10);
+                }
+                else
+                {
+                    autoSyncValue.Text = string.Empty;
+                    autoSyncValue.IsEnabled = false;
+                    SetSyncInterval(0);
+                }
+            };
+            autoSyncValue.Completed += (sender, args) =>
+            {
+                int value;
+                SetSyncInterval(int.TryParse(autoSyncValue.Text, out value) ? value : 0);
+            };
+
+            Content = new TableView
+            {
+                Intent = TableIntent.Settings,
+                Root = new TableRoot
+                {
+                    new TableSection("Storage")
+                    {
+                        _customStorageSwitch,
+                        _customStorageDirectoryEntry
+                    },
+                    new TableSection("Cloud sync")
+                    {
+                        autoSyncSwitch,
+                        autoSyncValue,
+                        _dropboxSwitch
+                    }
+                }
+            };
+        }
+
+        private void SetSyncInterval(int interval)
+        {
+            PersistedState.SyncInterval = interval;
+            SyncBootstrapper.RefreshFromSyncInterval();
+        }
+
+        private void InitializeDropboxSettings(IExternalBrowserService externalBrowserService, ApplicationEvents applicationEvents)
+        {
             _dropboxSwitch = new SwitchCell
             {
                 Text = "Use Dropbox",
@@ -41,23 +103,7 @@ namespace EmaXamarin.Pages
                 {
                     PersistedState.UserLogin = null;
                 }
-            };
-
-            Content = new TableView
-            {
-                Intent = TableIntent.Settings,
-                Root = new TableRoot
-                {
-                    new TableSection("Storage")
-                    {
-                        _customStorageSwitch,
-                        _customStorageDirectoryEntry
-                    },
-                    new TableSection("Cloud sync")
-                    {
-                        _dropboxSwitch
-                    }
-                }
+                SyncBootstrapper.RefreshForDropbox(_fileRepository);
             };
         }
 
@@ -77,6 +123,7 @@ namespace EmaXamarin.Pages
                     PersistedState.UserLogin = userPermission;
                 }
             }
+            SyncBootstrapper.RefreshForDropbox(_fileRepository);
         }
 
         private void InitializeStorageSettings(IFileRepository fileRepository)

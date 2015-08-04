@@ -49,6 +49,7 @@
     <Compile Include="Api\PageService.cs" />
     <Compile Include="ApplicationEvents.cs" />
     <Compile Include="CloudStorage\Dropbox\DropboxConnection.cs" />
+    <Compile Include="CloudStorage\SyncBootstrapper.cs" />
     <Compile Include="CloudStorage\Synchronization.cs" />
     <Compile Include="CloudStorage\ICloudStorageConnection.cs" />
     <Compile Include="CloudStorage\SyncCommand.cs" />
