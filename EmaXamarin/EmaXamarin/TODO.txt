@@ -4,3 +4,4 @@
 - website
 - sync with other cloud services
 - apk size
+- provide snippets
