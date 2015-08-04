@@ -16,7 +16,8 @@ namespace EmaXamarin.Api
         IEnumerable<string> EnumerateFiles(string txt);
         Stream OpenRead(string localPath);
         SyncedDirectory GetLocalSyncState();
-        void DeleteFile(string path);
+        void DeletePath(string path);
+        void DeleteFile(string fileName);
         void CreateDirectory(string dir);
     }
 }

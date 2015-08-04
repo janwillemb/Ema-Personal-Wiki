@@ -21,7 +21,7 @@ namespace EmaXamarin.Pages
             _editBox = new Editor
             {
                 VerticalOptions = LayoutOptions.FillAndExpand,
-                Text = _originalText
+                Text = _originalText,
             };
             _editBox.TextChanged += (sender, args) => PersistedState.AutoSaveEditText = args.NewTextValue;
 
@@ -35,19 +35,29 @@ namespace EmaXamarin.Pages
 
             ToolbarItems.Add(new ToolbarItem
             {
-                Text = "Cancel",
-                Command = new Command(Cancel)
+                Text = "Save",
+                Icon = "ic_menu_save.png",
+                Command = new Command(Save),
+                Order = ToolbarItemOrder.Primary
             });
             ToolbarItems.Add(new ToolbarItem
             {
                 Text = "Clear",
+                Icon = "ic_menu_clear_playlist.png",
                 Command = new Command(Clear)
             });
             ToolbarItems.Add(new ToolbarItem
             {
-                Text = "Save",
-                Command = new Command(Save),
-                Order = ToolbarItemOrder.Primary
+                Text = "Delete",
+                Icon = "ic_menu_delete.png",
+                Command = new Command(Delete),
+                Order = ToolbarItemOrder.Secondary
+            });
+            ToolbarItems.Add(new ToolbarItem
+            {
+                Text = "Cancel",
+                Command = new Command(Cancel),
+                Order = ToolbarItemOrder.Secondary
             });
         }
 
@@ -61,6 +71,15 @@ namespace EmaXamarin.Pages
         private void Clear()
         {
             WhatToDoWithUnsavedChanges(Save, () => { _editBox.Text = string.Empty; });
+        }
+
+        private void Delete()
+        {
+            WhatToDoWithUnsavedChanges(Save, () =>
+            {
+                _pageService.Delete(_pageName);
+                ClosePage();
+            });
         }
 
         private void Cancel()

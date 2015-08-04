@@ -87,5 +87,10 @@ namespace EmaXamarin.Api
         {
             return _storage.GetFileContents(pageName);
         }
+
+        public void Delete(string pageName)
+        {
+            _storage.DeletePage(pageName);
+        }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net;
 using System.Text.RegularExpressions;
 using EmaXamarin.Api;
 using Xamarin.Forms;
@@ -13,7 +14,6 @@ namespace EmaXamarin.Pages
     {
         private readonly IExternalBrowserService _externalBrowserService;
         private static readonly Regex EmaUrlRegex = new Regex(@"ema:(.+)");
-        private static readonly Regex CommandRegex = new Regex(@"emacmd:(.+)");
 
         public event EventHandler<RequestPageEventArgs> RequestPage;
         public event EventHandler RequestEdit;
@@ -31,21 +31,9 @@ namespace EmaXamarin.Pages
             if (m.Success)
             {
                 args.Cancel = true;
-                GoTo(m.Groups[1].Value);
-            }
-            else
-            {
-                m = CommandRegex.Match(args.Url);
-                if (m.Success)
-                {
-                    args.Cancel = true;
-                    switch (m.Groups[1].Value)
-                    {
-                        case "Edit":
-                            Edit();
-                            break;
-                    }
-                }
+                var pageName = m.Groups[1].Value;
+                pageName = WebUtility.UrlDecode(pageName);
+                GoTo(pageName);
             }
 
             if (!args.Cancel)
@@ -60,11 +48,6 @@ namespace EmaXamarin.Pages
         {
             var args = new RequestPageEventArgs {PageName = pageName};
             OnRequestPage(args);
-        }
-
-        private void Edit()
-        {
-            OnRequestEdit(new EventArgs());
         }
 
         protected virtual void OnRequestPage(RequestPageEventArgs e)

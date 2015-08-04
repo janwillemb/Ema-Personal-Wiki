@@ -128,9 +128,14 @@ namespace EmaXamarin.Droid
             return GetLocalSyncState(new DirectoryInfo(StorageDirectory));
         }
 
-        public void DeleteFile(string path)
+        public void DeletePath(string path)
         {
             File.Delete(path);
+        }
+
+        public void DeleteFile(string fileName)
+        {
+            File.Delete(GetPath(fileName));
         }
 
         public void CreateDirectory(string dir)

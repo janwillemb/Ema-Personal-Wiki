@@ -8,5 +8,6 @@ namespace EmaXamarin.Api
         string GetFileContents(string pageName);
         SearchResult[] RecentChanges();
         void SavePage(string pageName, string text);
+        void DeletePage(string pageName);
     }
 }

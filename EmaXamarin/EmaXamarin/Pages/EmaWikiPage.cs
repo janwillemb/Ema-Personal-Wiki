@@ -15,12 +15,11 @@ namespace EmaXamarin.Pages
         private readonly Stack<string> _pageHistory = new Stack<string>();
         private readonly SearchBar _searchBar;
         private const string SearchPageName = "ema:searchpage?query=";
-        private static readonly Logging Logger = Logging.For<EmaWikiPage>();
 
         /// <summary>
         /// constructor; builds the page and controls.
         /// </summary>
-        public EmaWikiPage(PageService pageService, IExternalBrowserService externalBrowserService, IFileRepository fileRepository)
+        public EmaWikiPage(PageService pageService, IExternalBrowserService externalBrowserService)
         {
             _pageService = pageService;
 
@@ -52,14 +51,22 @@ namespace EmaXamarin.Pages
             ToolbarItems.Add(new ToolbarItem
             {
                 Text = "Home",
-                Icon = "ic_home_white_24dp.png",
+                Icon = "ic_menu_home.png",
                 Command = new Command(() => GoTo(PageService.DefaultPage)),
                 Order = ToolbarItemOrder.Primary
             });
             ToolbarItems.Add(new ToolbarItem
             {
+                Text = "Edit",
+                Icon = "ic_menu_edit.png",
+                Command = new Command(EditCurrentPage),
+                Order = ToolbarItemOrder.Primary
+            });
+            ToolbarItems.Add(new ToolbarItem
+            {
                 Text = "Search",
-                Icon = "ic_search_white_24dp.png",
+                Icon = "ic_menu_search.png",
+                Order = ToolbarItemOrder.Secondary,
                 Command = new Command(() =>
                 {
                     _searchBar.Text = "";
@@ -73,28 +80,27 @@ namespace EmaXamarin.Pages
             });
             ToolbarItems.Add(new ToolbarItem
             {
-                Text = "Edit",
-                Icon = "ic_menu_edit.png",
-                Command = new Command(EditCurrentPage),
-                Order = ToolbarItemOrder.Primary
-            });
-            ToolbarItems.Add(new ToolbarItem
-            {
-                Text = "Settings",
-                Command = new Command(Settings),
+                Text = "Refresh",
+                Command = new Command(Refresh),
                 Order = ToolbarItemOrder.Secondary
             });
-
             ToolbarItems.Add(new ToolbarItem
             {
-                Icon = "ic_autorenew_white_24dp.png",
+                Icon = "ic_menu_upload.png",
                 Text = "Synchronize",
-                Command = new Command(async () => await Synchronize(fileRepository)),
+                Command = new Command(async () => await Synchronize()),
+                Order = ToolbarItemOrder.Secondary
+            });
+            ToolbarItems.Add(new ToolbarItem
+            {
+                Text = "Preferences",
+                Icon = "ic_menu_preferences.png",
+                Command = new Command(Settings),
                 Order = ToolbarItemOrder.Secondary
             });
         }
 
-        private async Task Synchronize(IFileRepository fileRepository)
+        private async Task Synchronize()
         {
             if (!SyncBootstrapper.CanSync)
             {
@@ -148,6 +154,16 @@ namespace EmaXamarin.Pages
 
         public void GoTo(string page)
         {
+            if (_pageHistory.Any())
+            {
+                var currentPage = _pageHistory.Peek();
+                if (currentPage == page)
+                {
+                    //probably pressed the Home button while being on Home.
+                    return;
+                }
+            }
+
             _pageHistory.Push(page);
             var isSearch = page.StartsWith(SearchPageName);
 
@@ -192,9 +208,14 @@ namespace EmaXamarin.Pages
             else
             {
                 //refresh on re-entering this page.
-                var currentPage = _pageHistory.Pop();
-                GoTo(currentPage);
+                Refresh();
             }
+        }
+
+        private void Refresh()
+        {
+            var currentPage = _pageHistory.Pop();
+            GoTo(currentPage);
         }
 
         protected override bool OnBackButtonPressed()

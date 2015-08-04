@@ -33,10 +33,12 @@ namespace EmaXamarin.CloudStorage
             await syncInfo.Initialize();
 
             var commands = syncInfo.CreateSyncCommands().ToArray();
-            int num = 2;
+            int num = 0;
             foreach (var syncCommand in commands)
             {
-                ReportProgress(syncProgress, commands.Length + 2, num++, syncCommand + " (" + num + "/" + commands.Length + ")");
+                num++;
+                //report progress + 2, because we have a start and end step
+                ReportProgress(syncProgress, commands.Length + 2, num + 2, syncCommand + " (" + num + "/" + commands.Length + ")");
 
                 Logger.Info(syncCommand.ToString());
                 switch (syncCommand.Type)
@@ -57,7 +59,7 @@ namespace EmaXamarin.CloudStorage
                         break;
 
                     case SyncType.DeleteLocal:
-                        _fileRepository.DeleteFile(syncCommand.File.LocalPath);
+                        _fileRepository.DeletePath(syncCommand.File.LocalPath);
                         break;
 
                     case SyncType.DeleteRemote:

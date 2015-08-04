@@ -50,6 +50,11 @@ namespace EmaXamarin.Api
             _fileRepository.SaveText(GetSafePageName(pageName), text);
         }
 
+        public void DeletePage(string pageName)
+        {
+            _fileRepository.DeleteFile(GetSafePageName(pageName));
+        }
+
         public SearchResult[] RecentChanges()
         {
             throw new NotImplementedException();

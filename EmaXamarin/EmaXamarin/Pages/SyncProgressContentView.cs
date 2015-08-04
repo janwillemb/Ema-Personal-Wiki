@@ -26,6 +26,7 @@ namespace EmaXamarin.Pages
 
         public void OnSyncStart()
         {
+            _progressbar.Progress = 0;
             IsVisible = true;
         }
 
