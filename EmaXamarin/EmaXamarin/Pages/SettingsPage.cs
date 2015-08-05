@@ -103,7 +103,7 @@ namespace EmaXamarin.Pages
                 {
                     PersistedState.UserLogin = null;
                 }
-                SyncBootstrapper.RefreshForDropbox(_fileRepository);
+                SyncBootstrapper.RefreshDropboxSync(_fileRepository);
             };
         }
 
@@ -123,7 +123,7 @@ namespace EmaXamarin.Pages
                     PersistedState.UserLogin = userPermission;
                 }
             }
-            SyncBootstrapper.RefreshForDropbox(_fileRepository);
+            SyncBootstrapper.RefreshDropboxSync(_fileRepository);
         }
 
         private void InitializeStorageSettings(IFileRepository fileRepository)

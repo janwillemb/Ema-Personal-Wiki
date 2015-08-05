@@ -12,12 +12,13 @@ namespace EmaXamarin.CloudStorage
         private static readonly Dictionary<string, Synchronization> Synchronizations = new Dictionary<string, Synchronization>();
         private static readonly object LockObject = new object();
         private static bool _isSyncing;
-        private static ISyncProgress _syncProgress;
-        private static Exception _syncException;
         private static bool _stop;
         private static bool _taskIsActive;
         private static readonly Logging Logger = Logging.For<SyncBootstrapper>();
+        private static ISyncProgress _syncProgress;
+        private static Exception _syncException;
         private static int _intervalMinutes;
+        private static DateTime _lastSyncDateTime = DateTime.MinValue;
 
         public static bool CanSync
         {
@@ -63,11 +64,18 @@ namespace EmaXamarin.CloudStorage
             Task.Run(async () =>
             {
                 _taskIsActive = true;
+
+                //always wait a few seconds: allow the UI to appear, so we have a progressbar available to show
+                await Task.Delay(TimeSpan.FromSeconds(5));
+
                 while (!_stop)
                 {
-                    Logger.Info("Sync triggered by interval");
-                    await StartSync();
-                    await Task.Delay(_intervalMinutes*60*1000);
+                    if (_lastSyncDateTime.AddMinutes(_intervalMinutes) < DateTime.Now)
+                    {
+                        Logger.Info("Sync triggered by interval");
+                        await StartSync();
+                    }
+                    await Task.Delay(TimeSpan.FromSeconds(1));
                 }
                 _taskIsActive = false;
             });
@@ -83,18 +91,18 @@ namespace EmaXamarin.CloudStorage
             if (_isSyncing)
                 return;
 
-            Synchronization[] synchronizations;
-            lock (LockObject)
-            {
-                if (_isSyncing)
-                    return;
-
-                _isSyncing = true;
-                synchronizations = Synchronizations.Values.ToArray();
-            }
-
             try
             {
+                Synchronization[] synchronizations;
+                lock (LockObject)
+                {
+                    if (_isSyncing)
+                        return;
+
+                    _isSyncing = true;
+                    synchronizations = Synchronizations.Values.ToArray();
+                }
+
                 if (_syncProgress != null)
                     _syncProgress.OnSyncStart();
 
@@ -115,6 +123,7 @@ namespace EmaXamarin.CloudStorage
             finally
             {
                 _isSyncing = false;
+                _lastSyncDateTime = DateTime.Now;
             }
         }
 
@@ -143,7 +152,7 @@ namespace EmaXamarin.CloudStorage
             }
         }
 
-        public static void RefreshForDropbox(IFileRepository fileRepository)
+        public static void RefreshDropboxSync(IFileRepository fileRepository)
         {
             var userPermission = PersistedState.UserLogin;
             if (string.IsNullOrEmpty(userPermission.Secret) || string.IsNullOrEmpty(userPermission.Token))

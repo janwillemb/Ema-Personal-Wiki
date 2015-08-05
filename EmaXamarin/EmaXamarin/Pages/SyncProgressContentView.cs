@@ -26,22 +26,31 @@ namespace EmaXamarin.Pages
 
         public void OnSyncStart()
         {
-            _progressbar.Progress = 0;
-            IsVisible = true;
+            Device.BeginInvokeOnMainThread(() =>
+            {
+                _progressbar.Progress = 0;
+                IsVisible = true;
+            });
         }
 
-        public async void ReportProgress(int totalSteps, int currentStep, string label)
+        public void ReportProgress(int totalSteps, int currentStep, string label)
         {
-            var fraction = (double) currentStep/Math.Max(1, totalSteps);
-            double progress = Math.Min(1, Math.Max(0, fraction));
+            Device.BeginInvokeOnMainThread(async () =>
+            {
+                var fraction = (double) currentStep/Math.Max(1, totalSteps);
+                double progress = Math.Min(1, Math.Max(0, fraction));
 
-            _progressLabel.Text = label;
-            await _progressbar.ProgressTo(progress, 100, Easing.Linear);
+                _progressLabel.Text = label;
+                await _progressbar.ProgressTo(progress, 100, Easing.Linear);
+            });
         }
 
         public void OnSyncFinished()
         {
-            IsVisible = false;
+            Device.BeginInvokeOnMainThread(() =>
+            {
+                IsVisible = false;
+            });
         }
     }
 }

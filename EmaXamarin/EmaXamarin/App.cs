@@ -1,5 +1,4 @@
-﻿using System.IO;
-using EmaXamarin.Api;
+﻿using EmaXamarin.Api;
 using EmaXamarin.CloudStorage;
 using EmaXamarin.Pages;
 using Xamarin.Forms;
@@ -19,15 +18,15 @@ namespace EmaXamarin
             {
                 fileRepository.StorageDirectory = PersistedState.CustomStorageDirectory;
             }
-            catch 
+            catch
             {
                 //can't do much about it now.
             }
 
             PageFactory.Initialize(service, fileRepository, externalBrowserService, _applicationEvents);
 
+            SyncBootstrapper.RefreshDropboxSync(fileRepository);
             SyncBootstrapper.RefreshFromSyncInterval();
-            SyncBootstrapper.RefreshForDropbox(fileRepository);
 
             MainPage = new NavigationPage(PageFactory.Current.CreateEmaWikiPage());
         }
