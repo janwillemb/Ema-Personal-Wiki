@@ -1,0 +1,19 @@
+<ion-header>
+    <ion-navbar hideBackButton="true">
+        <ion-buttons left>
+            <button ion-button icon-only clear (click)="cancel()">
+                <ion-icon name="arrow-back"></ion-icon>
+            </button>
+        </ion-buttons>
+        <ion-title>Edit {{pageTitle}}</ion-title>
+        <ion-buttons right>
+            <button ion-button icon-only clear (click)="save()">
+                <ion-icon name="checkmark"></ion-icon>
+            </button>
+        </ion-buttons>
+    </ion-navbar>
+</ion-header>
+
+<ion-content>
+    <textarea [(ngModel)]="pageContent"></textarea>
+</ion-content>

@@ -1,0 +1,26 @@
+<ion-header>
+  <ion-navbar hideBackButton="true">
+    <ion-buttons left *ngIf="canGoBack">
+      <button ion-button icon-only clear (click)="onBackButton()">
+        <ion-icon name="arrow-back"></ion-icon>
+      </button>
+    </ion-buttons>
+    <button ion-button icon-only menuToggle>
+        <ion-icon name="menu"></ion-icon>
+    </button>
+    <ion-title>{{pageTitle}}</ion-title>
+    <ion-buttons right>
+      <button ion-button icon-only clear (click)="edit()">
+        <ion-icon name="create"></ion-icon>
+      </button>
+      <button ion-button clear (click)="sync()">
+        <ion-icon name="sync" *ngIf="!isSyncing"></ion-icon>
+        <span *ngIf="isSyncing">{{syncProgress}}</span>
+      </button>
+    </ion-buttons>
+  </ion-navbar>
+</ion-header>
+
+<ion-content padding>
+  <div [innerHTML]="html"></div>
+</ion-content>
