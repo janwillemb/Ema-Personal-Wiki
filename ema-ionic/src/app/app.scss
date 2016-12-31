@@ -14,3 +14,23 @@
 // To declare rules for a specific mode, create a child rule
 // for the .md, .ios, or .wp mode classes. The mode class is
 // automatically applied to the <body> element in the app.
+ion-menu {
+    ion-list-header {
+        background-color: #{map-get($colors, "wiki-header-bg")} !important;
+        color: #{map-get($colors, "wiki-header-fg")} !important;
+    }
+}
+ion-header {
+    .toolbar-background {
+        background-color: #{map-get($colors, "wiki-header-bg")};
+    }
+    //title text in navbar
+    .toolbar-content {
+        .toolbar-title {
+            color: #{map-get($colors, "wiki-header-fg")};
+        }
+    }
+    .bar-button-default, ion-icon, span {
+        color: #{map-get($colors, "wiki-header-fg")};
+    }
+}

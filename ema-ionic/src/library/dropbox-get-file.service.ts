@@ -13,9 +13,9 @@ export class DropboxFileService extends DropboxBase {
         super(http);
     }
 
-    download(entry: IDropboxEntry, auth: IDropboxAuth): Promise<StoredFile> {
+    download(entry: IDropboxEntry, auth: IDropboxAuth, byRevision?: boolean): Promise<StoredFile> {
         return new Promise<StoredFile>((resolve, reject) => {
-            this.downloadText(entry.id, auth).subscribe(
+            this.downloadText(byRevision ? "rev:" + entry.rev : entry.id, auth).subscribe(
                 (value: string) => resolve(new StoredFile(entry.name, value)),
                 (error: any) => reject(error)
             );

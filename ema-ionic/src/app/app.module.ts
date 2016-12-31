@@ -1,3 +1,4 @@
+import { SettingsPage } from '../pages/settings/settings';
 import { DropboxSyncService } from '../library/dropbox-sync-service';
 import { WikiPageService } from '../library/wiki-page-service';
 import { LogsPage } from '../pages/logs/logs';
@@ -12,16 +13,13 @@ import { DropboxAuthService } from "../library/dropbox-auth.service";
 import { NgModule, ErrorHandler } from '@angular/core';
 import { IonicApp, IonicModule, IonicErrorHandler } from 'ionic-angular';
 import { Storage } from '@ionic/storage';
-
-import { MyApp } from './app.component';
-
-import { AboutPage } from '../pages/about/about';
 import { WikiPage } from '../pages/wiki/wiki';
+import { MyApp } from './app.component';
 
 @NgModule({
   declarations: [
     MyApp,
-    AboutPage,
+    SettingsPage,
     EditPage,
     LogsPage,
     WikiPage
@@ -32,7 +30,7 @@ import { WikiPage } from '../pages/wiki/wiki';
   bootstrap: [IonicApp],
   entryComponents: [
     MyApp,
-    AboutPage,
+    SettingsPage,
     LogsPage,
     EditPage,
     WikiPage

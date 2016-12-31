@@ -14,7 +14,7 @@
         <ion-icon name="create"></ion-icon>
       </button>
       <button ion-button clear (click)="sync()">
-        <ion-icon name="sync" *ngIf="!isSyncing"></ion-icon>
+        <ion-icon name="cloud" *ngIf="!isSyncing"></ion-icon>
         <span *ngIf="isSyncing">{{syncProgress}}</span>
       </button>
     </ion-buttons>

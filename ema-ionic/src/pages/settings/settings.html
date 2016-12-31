@@ -1,0 +1,23 @@
+<ion-header>
+  <ion-navbar>
+    <ion-title>
+      Settings
+    </ion-title>
+  </ion-navbar>
+</ion-header>
+
+<ion-content padding>
+  <ion-list>
+    <ion-item-group>
+      <ion-list-header>
+        <ion-label>
+          Synchronization
+        </ion-label>
+      </ion-list-header>
+      <ion-item>
+        <ion-label color="primary">Sync frequency</ion-label>
+        <ion-input type="number" placeholder="10 minutes" [(ngModel)]="syncMinutes"></ion-input>
+      </ion-item>
+    </ion-item-group>
+  </ion-list>
+</ion-content>

@@ -1,5 +1,8 @@
 page-wiki {
-    .force-back-button .back-button {
-    display: inline-block;
+    ion-header {
+        .toolbar-background {
+            background-image: url(../assets/img/wood.jpg);
+            background-repeat: no-repeat;
+        }
     }
 }

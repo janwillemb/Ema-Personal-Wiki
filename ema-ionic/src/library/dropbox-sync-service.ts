@@ -15,6 +15,7 @@ export class DropboxSyncService {
 
     private readonly syncInfoStorageKey: string = ".wiki-v3-sync-info";
     private ignoreCase = require("ignore-case");
+    private mergeText = require("plus.merge-text");
 
     constructor(
         private dropboxList: DropboxListFilesService,
@@ -108,13 +109,7 @@ export class DropboxSyncService {
 
                 //download + merge + upload files changed on both sides
                 //YOU WISH. Just download from server for now.
-                var mergePromises: Promise<any>[] = filesToMerge.map(file =>
-                    this.dropboxFile.download(file, auth)
-                        .then((file: StoredFile) => this.wikiStorage.save(file.fileName, file.contents))
-                        .then(() => state.makingProgress())
-                        .catch(err => {
-                            throw { msg: "merge failed for file " + file.name, err };
-                        }));
+                var mergePromises: Promise<any>[] = filesToMerge.map(file => this.mergeFile(file, auth, state));
 
                 var uploadPromises: Promise<any>[] = filesToUpload.map(file =>
                     this.dropboxFile.upload(file, auth)
@@ -162,6 +157,41 @@ export class DropboxSyncService {
             });
 
         return state;
+    }
+
+    private mergeFile(remote: IDropboxEntry, auth: IDropboxAuth, state: SyncState): Promise<any> {
+
+        var lastKnownLocalState = state.localSyncInfo.find(x => x.id === remote.id);
+
+        var downloadCurrent = this.dropboxFile.download(remote, auth);
+        var downloadParentRevision: Promise<StoredFile>;
+        if (lastKnownLocalState) {
+            downloadParentRevision = this.dropboxFile.download(lastKnownLocalState, auth, true);
+        } else {
+            //apparently both files are new, so make a random decision about which one to take
+            downloadParentRevision = downloadCurrent;
+        }
+        var localFile = state.allLocalFiles.find(x => this.ignoreCase.equals(x.fileName, remote.name));
+
+        return Promise.all([downloadCurrent, downloadParentRevision])
+            .then((resolved: StoredFile[]) => {
+                var latestRemoteState = resolved[0];
+                var parentStateOfLocalChange = resolved[1];
+
+                let origin = parentStateOfLocalChange.contents;
+                let update1 = latestRemoteState.contents;
+                let update2 = localFile.contents;
+                let merged = this.mergeText.merge(origin, update1, update2);
+
+                return this.wikiStorage.save(localFile.fileName, merged.toMarkdown());
+            })
+            //merge done, now upload result to dropbox
+            .then(() => this.wikiStorage.getFileContents(localFile.fileName))
+            .then((newLocalFile: StoredFile) => this.dropboxFile.upload(newLocalFile, auth))
+            .then(() => state.makingProgress())
+            .catch(err => {
+                throw { msg: "merge failed for file " + remote.name, err };
+            });
     }
 
     /**

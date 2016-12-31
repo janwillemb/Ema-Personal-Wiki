@@ -1,3 +1,4 @@
+import { Settings } from '../../library/settings';
 import { DropboxSyncService } from '../../library/dropbox-sync-service';
 import { WikiPageService } from '../../library/wiki-page-service';
 import { LoggingService } from '../../library/logging-service';
@@ -6,7 +7,13 @@ import { Stack } from '../../library/stack';
 import { DomSanitizer } from '@angular/platform-browser';
 import { WikiFile } from '../../library/wiki-file';
 import { Component, ElementRef, OnInit, Renderer, SecurityContext } from '@angular/core';
-import { Loading, LoadingController, ModalController, NavController, ToastController } from 'ionic-angular';
+import {
+  Loading,
+  LoadingController,
+  ModalController,
+  NavController,
+  ToastController
+} from 'ionic-angular';
 import { DropboxAuthService } from "../../library/dropbox-auth.service";
 import { IDropboxAuth } from "../../library/idropbox-auth";
 
@@ -21,12 +28,11 @@ export class WikiPage implements OnInit {
   isSyncing: boolean;
   syncProgress: string;
 
-  private auth: IDropboxAuth;
   private pageStack = new Stack<WikiFile>();
   private loading: Loading;
 
   constructor(
-    public navCtrl: NavController,
+    private navCtrl: NavController,
     private dropboxAuthService: DropboxAuthService,
     private dropboxSyncService: DropboxSyncService,
     private loadingController: LoadingController,
@@ -34,6 +40,7 @@ export class WikiPage implements OnInit {
     private wikiPageService: WikiPageService,
     private toastController: ToastController,
     private loggingService: LoggingService,
+    private settings: Settings,
     domSanitizer: DomSanitizer,
     elementRef: ElementRef,
     renderer: Renderer) {
@@ -53,16 +60,22 @@ export class WikiPage implements OnInit {
       }
       return true;
     });
-
   }
 
   ngOnInit() {
-    this.dropboxAuthService.getDropboxAuthentication()
-      .then((auth: IDropboxAuth) => {
-        this.auth = auth;
-      })
-      .catch(error => this.log("Error initializing Dropbox",error))
-      .then(() => this.gotoPage("Home"));
+    this.gotoPage("Home");
+
+    //start auto-sync
+    this.planNextAutoSync()
+  }
+
+  private planNextAutoSync() {
+    this.settings.getSyncMinutes().then((syncMinutes: number) => {
+        setTimeout(() => {
+          this.sync();
+          this.planNextAutoSync();
+        }, syncMinutes * 60 * 1000);
+      });
   }
 
   private processLinkClick(href: string) {
@@ -106,7 +119,7 @@ export class WikiPage implements OnInit {
 
   private log(what: string, err: any): void {
     what = what || "";
-    if (typeof(what) !== "string") {
+    if (typeof (what) !== "string") {
       what = JSON.stringify(what);
     }
     this.showToast(what);
@@ -159,27 +172,36 @@ export class WikiPage implements OnInit {
   }
 
   sync(): void {
+    if (this.isSyncing) {
+      return;
+    }
     this.syncProgress = "..%";
     this.isSyncing = true;
 
-    var syncInfo = this.dropboxSyncService.syncFiles(this.auth);
+    var subscription;
+    this.dropboxAuthService.getDropboxAuthentication()
+      .then((auth: IDropboxAuth) => {
+        var syncInfo = this.dropboxSyncService.syncFiles(auth);
 
-    var syncLabel: string;
-    var subscription = syncInfo.progress.subscribe(next => {
-      if (next.label && next.label !== syncLabel) {
-        this.showToast(next.label);
-        syncLabel = next.label;
-      }
-      if (next.total) {
-        var pct = Math.min(Math.round(next.current * 100 / next.total), 99);
-        this.syncProgress = pct + "%";
-      }
-    });
+        var syncLabel: string;
+        subscription = syncInfo.progress.subscribe(next => {
+          if (next.label && next.label !== syncLabel) {
+            this.showToast(next.label);
+            syncLabel = next.label;
+          }
+          if (next.total) {
+            var pct = Math.min(Math.round(next.current * 100 / next.total), 99);
+            this.syncProgress = pct + "%";
+          }
+        });
 
-    syncInfo.promise
+        return syncInfo.promise;
+      })
       .catch(err => this.log("Error while synchronizing", err))
       .then(() => {
-        subscription.unsubscribe();
+        if (subscription) {
+          subscription.unsubscribe();
+        }
         this.isSyncing = false;
         this.refresh();
       });
