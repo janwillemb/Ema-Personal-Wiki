@@ -1,31 +1,52 @@
+import { ViewChild } from '@angular/core/src/metadata/di';
+import { HelpPage } from '../help/help';
+import { Settings } from '../../library/settings';
 import { WikiFile } from '../../library/wiki-file';
-import { AlertController, NavParams, ViewController } from 'ionic-angular';
+import { AlertController, NavController, NavParams, ViewController } from 'ionic-angular';
 import { Component } from '@angular/core';
 
 @Component({
-  selector: 'page-edit',
-  templateUrl: 'edit.html'
+    selector: 'page-edit',
+    templateUrl: 'edit.html'
 })
 export class EditPage {
     pageContent: string;
     pageTitle: string;
     orginalContent: string;
+    styleGrey: boolean;
+
+    @ViewChild("pageContentTextArea") pageContentTextArea;
 
     constructor(
         navParams: NavParams,
-        private alertController: AlertController, 
+        settings: Settings,
+        private alertController: AlertController,
+        private navController: NavController,
         private viewController: ViewController) {
 
         var page: WikiFile = navParams.get("page");
         this.pageTitle = page.pageName;
         this.pageContent = page.contents;
         this.orginalContent = this.pageContent;
+
+        this.styleGrey = settings.getStyle() === "Grey";
+    }
+
+    ionViewDidEnter() {
+        this.pageContentTextArea.nativeElement.focus();
     }
 
     save() {
-        this.viewController.dismiss({pageContent: this.pageContent});
+        this.viewController.dismiss({ pageContent: this.pageContent });
     }
-    
+
+    help() {
+        this.navController.push(HelpPage);
+    }
+
+    onBackButton() {
+        this.cancel();
+    }
     cancel() {
         if (this.orginalContent !== this.pageContent) {
             let confirm = this.alertController.create({
@@ -34,7 +55,7 @@ export class EditPage {
                 buttons: [{
                     text: "OK",
                     handler: () => {
-                        this.viewController.dismiss({cancel: true});
+                        this.viewController.dismiss({ cancel: true });
                     }
                 }, {
                     text: "Cancel"
@@ -42,7 +63,7 @@ export class EditPage {
             });
             confirm.present();
         } else {
-            this.viewController.dismiss({cancel: true});
+            this.viewController.dismiss({ cancel: true });
         }
     }
 }

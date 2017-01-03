@@ -1,3 +1,4 @@
+import { Settings } from '../../library/settings';
 import { LoggingService } from '../../library/logging-service';
 import { Component } from '@angular/core';
 import { Clipboard } from 'ionic-native';
@@ -9,9 +10,16 @@ import { NavController, ToastController } from 'ionic-angular';
 })
 export class LogsPage {
   logLines: string[];
+  styleGrey: boolean;
 
-  constructor(public navCtrl: NavController, loggingService: LoggingService, private toastController: ToastController) {
+  constructor(
+    settings: Settings,
+    loggingService: LoggingService,
+    private navCtrl: NavController,
+    private toastController: ToastController) {
+
     this.logLines = loggingService.consumeLogLines();
+    this.styleGrey = settings.getStyle() === "Grey";
   }
 
   onBackButton() {

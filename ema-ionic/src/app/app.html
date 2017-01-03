@@ -1,4 +1,4 @@
-<ion-menu [content]="navController">
+<ion-menu [content]="navController" [class.grey]="styleGrey">
   <ion-content>
     <ion-list>
       <ion-list-header>
@@ -6,7 +6,9 @@
           PersonalWiki
         </ion-label>
       </ion-list-header>
+      <button ion-item menuClose (click)="showSettings()">Settings</button>
       <button ion-item menuClose (click)="showLogs()">Show logs</button>
+      <button ion-item menuClose (click)="exit()">Exit</button>
     </ion-list>
   </ion-content>
 </ion-menu>

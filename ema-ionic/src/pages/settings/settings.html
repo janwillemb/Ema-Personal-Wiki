@@ -1,4 +1,4 @@
-<ion-header>
+<ion-header [class.grey]="styleGrey">
   <ion-navbar>
     <ion-title>
       Settings
@@ -6,18 +6,31 @@
   </ion-navbar>
 </ion-header>
 
-<ion-content padding>
+<ion-content>
   <ion-list>
-    <ion-item-group>
-      <ion-list-header>
-        <ion-label>
-          Synchronization
-        </ion-label>
-      </ion-list-header>
-      <ion-item>
-        <ion-label color="primary">Sync frequency</ion-label>
-        <ion-input type="number" placeholder="10 minutes" [(ngModel)]="syncMinutes"></ion-input>
-      </ion-item>
-    </ion-item-group>
+    <button ion-item (click)="clearSyncInfo()">Forget Dropbox credentials</button>
+    <ion-item>
+      <ion-label>Sync frequency</ion-label>
+      <ion-input type="number" placeholder="10 minutes" [(ngModel)]="syncMinutes"></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-label>Style</ion-label>
+      <ion-select [(ngModel)]="styleName">
+        <ion-option>Wood</ion-option>
+        <ion-option>Grey</ion-option>
+      </ion-select>
+    </ion-item>
+    <ion-item>
+      <ion-label>Show search</ion-label>
+      <ion-toggle [(ngModel)]="showSearch"></ion-toggle>
+    </ion-item>
+    <ion-item>
+      <ion-label>Restore last page on start</ion-label>
+      <ion-toggle [(ngModel)]="restoreLast"></ion-toggle>
+    </ion-item>
+    <ion-item>
+      <ion-label>Use {{ '{' }} } for wikiwords (legacy)</ion-label>
+      <ion-toggle [(ngModel)]="useCurly"></ion-toggle>
+    </ion-item>
   </ion-list>
 </ion-content>

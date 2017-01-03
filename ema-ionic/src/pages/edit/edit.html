@@ -1,4 +1,4 @@
-<ion-header>
+<ion-header [class.grey]="styleGrey">
     <ion-navbar hideBackButton="true">
         <ion-buttons left>
             <button ion-button icon-only clear (click)="cancel()">
@@ -7,6 +7,9 @@
         </ion-buttons>
         <ion-title>Edit {{pageTitle}}</ion-title>
         <ion-buttons right>
+            <button ion-button icon-only clear (click)="help()">
+                <ion-icon name="help-circle"></ion-icon>
+            </button>
             <button ion-button icon-only clear (click)="save()">
                 <ion-icon name="checkmark"></ion-icon>
             </button>
@@ -15,5 +18,5 @@
 </ion-header>
 
 <ion-content>
-    <textarea [(ngModel)]="pageContent"></textarea>
+    <textarea [(ngModel)]="pageContent" #pageContentTextArea></textarea>
 </ion-content>

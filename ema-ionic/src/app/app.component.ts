@@ -1,6 +1,8 @@
+import { Settings } from '../library/settings';
+import { SettingsPage } from '../pages/settings/settings';
 import { LogsPage } from '../pages/logs/logs';
 import { Component, ViewChild } from '@angular/core';
-import { NavController, Platform } from 'ionic-angular';
+import { MenuController, NavController, Platform } from 'ionic-angular';
 import { StatusBar, Splashscreen } from 'ionic-native';
 
 import { WikiPage } from '../pages/wiki/wiki';
@@ -9,20 +11,58 @@ import { WikiPage } from '../pages/wiki/wiki';
     templateUrl: 'app.html'
 })
 export class MyApp {
-    rootPage = WikiPage;
+    rootPage: any;
     @ViewChild("navController") navController: NavController;
+    styleGrey: boolean;
+    static instance: MyApp;
 
-    constructor(platform: Platform) {
+    constructor(
+        private platform: Platform, 
+        private settings: Settings, 
+        private menu: MenuController) {
+            
         platform.ready().then(() => {
-            // Okay, so the platform is ready and our plugins are available.
-            // Here you can do any higher level native things you might need.
             StatusBar.styleDefault();
-            Splashscreen.hide();
+
+            settings.waitForInitialize().then(() => {
+                this.rootPage = WikiPage;
+                this.reloadStyle();
+                setTimeout(() => Splashscreen.hide(), 100);
+            });
+
+            platform.registerBackButtonAction(() => this.onBackButton(), Number.MAX_VALUE);
         });
+
+        MyApp.instance = this;
+    }
+
+    private onBackButton() {
+        if (this.menu.isOpen()) {
+            this.menu.close();
+        } else {
+            var activePage = this.navController.getActive();
+            if (activePage.instance.onBackButton) {
+                activePage.instance.onBackButton();
+            } else {
+                this.navController.pop();
+            }
+        }
+    }
+
+    reloadStyle() {
+        this.styleGrey = this.settings.getStyle() === "Grey";
     }
 
     showLogs() {
         this.navController.push(LogsPage);
-    } 
+    }
+
+    showSettings() {
+        this.navController.push(SettingsPage);
+    }
+
+    exit() {
+        this.platform.exitApp();
+    }
 
 }

@@ -1,17 +1,20 @@
+import { Settings } from './settings';
 import { DropboxBase } from './dropbox-base';
 import { IDropboxEntry } from './idropbox-entry';
 import { Injectable } from '@angular/core';
 import 'rxjs/add/operator/map';
 import { IDropboxAuth } from './idropbox-auth';
 import { Http } from '@angular/http';
+declare function require(name: string);
 
 @Injectable()
 export class DropboxListFilesService extends DropboxBase {
 
     private auth: IDropboxAuth;
+    private ignoreCase = require("ignore-case");
 
-    constructor(http: Http) {
-        super(http);
+    constructor(http: Http, settings: Settings) {
+        super(http, settings);
     }
 
     listFiles(auth: IDropboxAuth, includeDeleted?: boolean): Promise<IDropboxEntry[]> {
@@ -25,13 +28,17 @@ export class DropboxListFilesService extends DropboxBase {
     getChangedFiles(currentList: IDropboxEntry[], prevList: IDropboxEntry[]): IDropboxEntry[] {
         //compare with what was changed 
         let changedItems = currentList.filter(item => {
-            var prevItem = prevList.find(x => x.id === item.id);
-            //no previous item? Then this is a changed item
+            var prevItem = prevList.find(x => this.ignoreCase.equals(x.name, item.name));
+            //no previous item, and the remote item is not deleted: Then this is a changed item
             if (!prevItem) {
-                return true;
+                if (!item.deleted) {
+                    return true;
+                } else {
+                    return false;
+                }
             }
-            //if item revision is different, it must haven been changed on the server
-            return prevItem.rev !== item.rev;
+            //if item revision is different, or it is deleted, it must haven been changed on the server
+            return item.deleted || prevItem.rev !== item.rev;
         });
         return changedItems;
     }
@@ -55,8 +62,8 @@ export class DropboxListFilesService extends DropboxBase {
                         rev: entry.rev
                     };
                 })).subscribe(
-                (entries: IDropboxEntry[]) => resolve(entries),
-                err => reject(err)
+                    (entries: IDropboxEntry[]) => resolve(entries),
+                    err => reject(err)
                 );
         });
     }

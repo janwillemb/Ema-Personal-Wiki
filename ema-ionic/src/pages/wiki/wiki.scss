@@ -4,5 +4,29 @@ page-wiki {
             background-image: url(../assets/img/wood.jpg);
             background-repeat: no-repeat;
         }
+
+        &.grey {
+            .toolbar-background {
+                background-image: url(../assets/img/grey.jpg);
+                background-repeat: no-repeat;
+            }
+        }
+    }
+
+    .emptyPageContent {
+        color: silver;
+    }
+
+    .search-result {
+        padding-bottom: 15px;
+        
+        .search-result-title {
+            font-weight: bold;
+        }
+        .search-result-snippet {
+            .highlight {
+                background-color: yellow;
+            }
+        }
     }
 }

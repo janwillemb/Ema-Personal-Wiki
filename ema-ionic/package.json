@@ -26,6 +26,8 @@
     "marked": "0.3.6",
     "plus.merge-text": "0.0.3",
     "rxjs": "5.0.1",
+    "serialize-error": "^2.1.0",
+    "throat": "^3.0.0",
     "xregexp": "^3.1.1",
     "zone.js": "0.6.26"
   },

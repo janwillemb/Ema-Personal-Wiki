@@ -8,6 +8,7 @@ export class SyncState {
     allLocalFiles: StoredFile[];
     localChangedFiles: StoredFile[];
     localDeletedFiles: IDropboxEntry[];
+    failedFiles: string[] = [];
     promise: Promise<any>;
     progress = new Subject<SyncProgress>();
 

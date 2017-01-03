@@ -19,6 +19,12 @@ ion-menu {
         background-color: #{map-get($colors, "wiki-header-bg")} !important;
         color: #{map-get($colors, "wiki-header-fg")} !important;
     }
+    &.grey {
+        ion-list-header {
+            background-color: #{map-get($colors, "wiki-header-bg-grey")} !important;
+            color: #{map-get($colors, "wiki-header-fg-grey")} !important;
+        }
+    }
 }
 ion-header {
     .toolbar-background {
@@ -32,5 +38,21 @@ ion-header {
     }
     .bar-button-default, ion-icon, span {
         color: #{map-get($colors, "wiki-header-fg")};
+    }
+
+    &.grey {
+        .toolbar-background {
+            background-color: #{map-get($colors, "wiki-header-bg-grey")};
+        }
+        //title text in navbar
+        .toolbar-content {
+            .toolbar-title {
+                color: #{map-get($colors, "wiki-header-fg-grey")};
+            }
+        }
+        .bar-button-default, ion-icon, span {
+            color: #{map-get($colors, "wiki-header-fg-grey")};
+        }
+
     }
 }

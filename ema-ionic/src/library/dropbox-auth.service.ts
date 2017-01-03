@@ -1,40 +1,53 @@
+import { Settings } from './settings';
 import { LoggingService } from './logging-service';
 import { Injectable } from '@angular/core';
 import { InAppBrowser } from 'ionic-native';
-import { Storage } from '@ionic/storage';
-
 import { IDropboxAuth } from "./idropbox-auth";
+import { Storage } from '@ionic/storage';
+declare function require(name: string);
 
 @Injectable()
 export class DropboxAuthService {
 
-    constructor(private storage: Storage, private loggingService: LoggingService) {
+    private serializeError = require("serialize-error");
 
+    constructor(private settings: Settings, private loggingService: LoggingService, private storage: Storage) {
+
+    }
+
+    hasAuthenticatedWithDropbox(): boolean {
+        return !!this.settings.getDropboxAuthInfo();
     }
 
     getDropboxAuthentication(): Promise<IDropboxAuth> {
         //for local testing in Ripple, the embedded browser solution won't work.
         //harvest an accesstoken from the device first (tip: Clipboard.copy (see below) -> mail to self)
-        // this.storage.set("dropboxAuth", { "accessToken": "(my glorious accesstoken here)", "tokenType": "bearer", "uid": "my uid here", "accountId": "my account id here" })
 
-        return this.storage.get("dropboxAuth")
-            .then(value => {
-                if (!value) {
-                    throw "no value";
-                }
+        //import { Storage } from '@ionic/storage'; (in imports)
+        //, private storage: Storage (in constructor)
+        // 
+        // this.storage.set("dropboxAuth", {
+        //     "accessToken": "<accesstoken>", 
+        //     "tokenType": "bearer", "uid": "<uid>", "accountId": "<accountid>"
+        // });
+
+        return new Promise<IDropboxAuth>((resolve, reject) => {
+            var info = this.settings.getDropboxAuthInfo();
+            if (info) {
                 this.loggingService.log("Found Dropbox auth-info in localstorage");
-                return value;
-            })
-            .catch(() => {
+                resolve(info);
+            } else {
                 this.loggingService.log("Didn't find Dropbox auth-info; ask user.");
-                return this.askDropboxPermission()
+                this.askDropboxPermission()
                     .then(rawUrl => this.parseDropboxReturnValue(rawUrl))
                     .then((dropboxAuth: IDropboxAuth) => {
                         //Clipboard.copy here
-                        this.storage.set("dropboxAuth", dropboxAuth);
-                        return dropboxAuth;
-                    });
-            });
+                        this.settings.setDropboxAuthInfo(dropboxAuth);
+                        resolve(dropboxAuth);
+                    })
+                    .catch((err) => reject("Error asking for Dropbox info: " + JSON.stringify(this.serializeError(err))));
+            }
+        });
     }
 
     private parseDropboxReturnValue(url: string): Promise<IDropboxAuth> {
@@ -70,7 +83,7 @@ export class DropboxAuthService {
                     }
                 });
             } catch (ex) {
-                reject("ERROR: " + JSON.stringify(ex));
+                reject("ERROR: " + JSON.stringify(this.serializeError(ex)));
             }
         });
     }

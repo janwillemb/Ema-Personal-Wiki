@@ -1,3 +1,4 @@
+import { HelpPage } from '../pages/help/help';
 import { SettingsPage } from '../pages/settings/settings';
 import { DropboxSyncService } from '../library/dropbox-sync-service';
 import { WikiPageService } from '../library/wiki-page-service';
@@ -21,6 +22,7 @@ import { MyApp } from './app.component';
     MyApp,
     SettingsPage,
     EditPage,
+    HelpPage,
     LogsPage,
     WikiPage
   ],
@@ -32,6 +34,7 @@ import { MyApp } from './app.component';
     MyApp,
     SettingsPage,
     LogsPage,
+    HelpPage,
     EditPage,
     WikiPage
   ],

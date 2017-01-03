@@ -9,8 +9,8 @@ import { DropboxBase } from './dropbox-base';
 @Injectable()
 export class DropboxFileService extends DropboxBase {
 
-    constructor(http: Http, private settings: Settings) {
-        super(http);
+    constructor(http: Http, settings: Settings) {
+        super(http, settings);
     }
 
     download(entry: IDropboxEntry, auth: IDropboxAuth, byRevision?: boolean): Promise<StoredFile> {

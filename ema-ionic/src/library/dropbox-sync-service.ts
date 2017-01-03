@@ -16,6 +16,7 @@ export class DropboxSyncService {
     private readonly syncInfoStorageKey: string = ".wiki-v3-sync-info";
     private ignoreCase = require("ignore-case");
     private mergeText = require("plus.merge-text");
+    private throat = require("throat")(1); //max 1 concurrent request to dropbox.
 
     constructor(
         private dropboxList: DropboxListFilesService,
@@ -29,8 +30,10 @@ export class DropboxSyncService {
         var state = new SyncState();
         state.makingProgress("Initializing");
 
-        //get the previous list of files from the local directory
-        state.promise = this.getLocalSyncInfo()
+        //make sure the directory exists remotely
+        state.promise = this.dropboxList.initialize(auth)
+            //get the previous list of files from the local directory
+            .then(() => this.getLocalSyncInfo())
             //get list of files from dropbox
             .then((localList: IDropboxEntry[]) => {
                 state.localSyncInfo = localList;
@@ -61,9 +64,10 @@ export class DropboxSyncService {
 
                 //files, not changed locally, but changed or deleted remotely, have to been downloaded/deleted
                 var filesToDownload = state.remoteChangedFiles.filter(x => {
-                    var existsLocally = state.localChangedFiles.find(y => this.ignoreCase.equals(x.name, y.fileName));
+                    var existsLocally = state.allLocalFiles.find(y => this.ignoreCase.equals(x.name, y.fileName));
                     return x.deleted && existsLocally || !x.deleted && !existsLocally;
                 });
+
                 //files changed locally, but unchanged remotely, can be uploaded safely
                 var filesToUpload = state.localChangedFiles.filter(x => {
                     return !state.remoteChangedFiles.find(y => this.ignoreCase.equals(y.name, x.fileName) && !y.deleted);
@@ -88,7 +92,8 @@ export class DropboxSyncService {
                         .then((storedFile: StoredFile) => this.wikiStorage.save(storedFile.fileName, storedFile.contents))
                         .then(() => state.makingProgress())
                         .catch(err => {
-                            throw { msg: "download failed for file " + file.name, err };
+                            this.loggingService.log("download failed for file " + file.name, err);
+                            state.failedFiles.push(file.name);
                         }));
 
                 //and do delete the remote deleted files
@@ -96,7 +101,8 @@ export class DropboxSyncService {
                     this.wikiStorage.delete(file.name)
                         .then(() => state.makingProgress())
                         .catch(err => {
-                            throw { msg: "delete failed for file " + file.name, err };
+                            this.loggingService.log("delete failed for file " + file.name, err);
+                            state.failedFiles.push(file.name);
                         }));
 
                 //upload deletions to dropbox
@@ -104,25 +110,27 @@ export class DropboxSyncService {
                     this.dropboxFile.delete(file, auth)
                         .then(() => state.makingProgress())
                         .catch(err => {
-                            throw { msg: "remote delete failed for file " + file.name, err };
+                            this.loggingService.log("remote delete failed for file " + file.name, err);
+                            state.failedFiles.push(file.name);
                         }));
 
                 //download + merge + upload files changed on both sides
-                //YOU WISH. Just download from server for now.
                 var mergePromises: Promise<any>[] = filesToMerge.map(file => this.mergeFile(file, auth, state));
 
-                var uploadPromises: Promise<any>[] = filesToUpload.map(file =>
-                    this.dropboxFile.upload(file, auth)
+                var uploadPromises: Promise<any>[] = filesToUpload.map(file => {
+                    return this.dropboxFile.upload(file, auth)
                         .then(() => state.makingProgress())
                         .catch(err => {
-                            throw { msg: "uplolad failed for file " + file.fileName, err };
-                        }));
+                            this.loggingService.log("upload failed for file " + file.fileName, err);
+                            state.failedFiles.push(file.fileName);
+                        });
+                });
 
-                this.loggingService.log("downloads: " + downloadPromises.length);
-                this.loggingService.log("delete local: " + deletePromises.length);
-                this.loggingService.log("delete remote: " + deleteRemotePromises.length);
-                this.loggingService.log("merges: " + mergePromises.length);
-                this.loggingService.log("uploads: " + uploadPromises.length);
+                this.loggingService.log("downloads: " + downloadPromises.length
+                    + "; delete local: " + deletePromises.length
+                    + "; delete remote: " + deleteRemotePromises.length
+                    + "; merges: " + mergePromises.length
+                    + "; uploads: " + uploadPromises.length);
 
                 //wait until all promises have been fulfilled
                 var allPromises: Promise<any>[] = []
@@ -134,6 +142,9 @@ export class DropboxSyncService {
 
                 state.setTotalSteps(allPromises.length);
 
+                //throttle the requests: max 1 concurrent request to dropbox.
+                allPromises = allPromises.map(x => this.throat(() => x));
+
                 return Promise.all(allPromises);
             })
             //redownload current state from dropbox (after the uploads/deletions the last state has become stale)
@@ -143,8 +154,10 @@ export class DropboxSyncService {
                 return this.dropboxList.listFiles(auth);
             })
             .then((allRemoteFiles: IDropboxEntry[]) => {
+                //remove failed files, it makes no sense to keep any state on that file
+                var allSucceeded = allRemoteFiles.filter(x => state.failedFiles.indexOf(x.name) === -1);
                 //calculate all checksums (= open all files to get contents to calc the checksum)
-                var checksumPromises = allRemoteFiles.filter(x => x.isFile).map(x =>
+                var checksumPromises = allSucceeded.filter(x => x.isFile).map(x =>
                     this.wikiStorage.getFileContents(x.name).then(file => {
                         x.checksum = file.checksum;
                         return x;
@@ -190,7 +203,8 @@ export class DropboxSyncService {
             .then((newLocalFile: StoredFile) => this.dropboxFile.upload(newLocalFile, auth))
             .then(() => state.makingProgress())
             .catch(err => {
-                throw { msg: "merge failed for file " + remote.name, err };
+                this.loggingService.log("merge failed for file " + remote.name, err);
+                state.failedFiles.push(remote.name);
             });
     }
 

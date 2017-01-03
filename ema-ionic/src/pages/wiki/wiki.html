@@ -1,8 +1,11 @@
-<ion-header>
+<ion-header [class.grey]="styleGrey">
   <ion-navbar hideBackButton="true">
-    <ion-buttons left *ngIf="canGoBack">
-      <button ion-button icon-only clear (click)="onBackButton()">
+    <ion-buttons left>
+      <button ion-button icon-only clear (click)="onBackButton()" *ngIf="canGoBack">
         <ion-icon name="arrow-back"></ion-icon>
+      </button>
+      <button ion-button icon-only clear (click)="goHome()" *ngIf="!isHome">
+        <ion-icon name="home"></ion-icon>
       </button>
     </ion-buttons>
     <button ion-button icon-only menuToggle>
@@ -10,7 +13,7 @@
     </button>
     <ion-title>{{pageTitle}}</ion-title>
     <ion-buttons right>
-      <button ion-button icon-only clear (click)="edit()">
+      <button ion-button icon-only clear (click)="edit()" *ngIf="canEdit">
         <ion-icon name="create"></ion-icon>
       </button>
       <button ion-button clear (click)="sync()">
@@ -22,5 +25,19 @@
 </ion-header>
 
 <ion-content padding>
+  <span *ngIf="!html" class="emptyPageContent">(edit the page to add content)</span>
   <div [innerHTML]="html"></div>
 </ion-content>
+
+<ion-footer *ngIf="showSearch">
+  <table>
+    <tr>
+      <td>
+        <ion-searchbar [(ngModel)]="searchTerm" placeholder="regular expression"></ion-searchbar>
+      </td>
+      <td>
+      <button ion-button color="light" (click)="search()">Search</button>
+      </td>
+    </tr>
+  </table>
+</ion-footer>

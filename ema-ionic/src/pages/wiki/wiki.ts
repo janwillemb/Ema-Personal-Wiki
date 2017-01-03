@@ -1,3 +1,5 @@
+import { SyncState } from '../../library/sync-state';
+import { MyApp } from '../../app/app.component';
 import { Settings } from '../../library/settings';
 import { DropboxSyncService } from '../../library/dropbox-sync-service';
 import { WikiPageService } from '../../library/wiki-page-service';
@@ -6,30 +8,37 @@ import { EditPage } from '../edit/edit';
 import { Stack } from '../../library/stack';
 import { DomSanitizer } from '@angular/platform-browser';
 import { WikiFile } from '../../library/wiki-file';
-import { Component, ElementRef, OnInit, Renderer, SecurityContext } from '@angular/core';
-import {
-  Loading,
-  LoadingController,
-  ModalController,
-  NavController,
-  ToastController
-} from 'ionic-angular';
+import { Component, ElementRef, Renderer, SecurityContext } from '@angular/core';
+import { Loading, LoadingController, Modal, ModalController, NavController, ToastController } from 'ionic-angular';
 import { DropboxAuthService } from "../../library/dropbox-auth.service";
 import { IDropboxAuth } from "../../library/idropbox-auth";
+declare function require(name: string);
 
 @Component({
   selector: 'page-wiki',
   templateUrl: 'wiki.html'
 })
-export class WikiPage implements OnInit {
+export class WikiPage {
   html = "";
   canGoBack = false;
-  pageTitle = "Home";
+  pageTitle: string;
+  isHome: boolean;
+
   isSyncing: boolean;
   syncProgress: string;
+  lastSync: Date;
+
+  styleGrey: boolean;
+  searchTerm: string;
+  showSearch: boolean;
+  canEdit: boolean;
 
   private pageStack = new Stack<WikiFile>();
   private loading: Loading;
+  private serializeError = require("serialize-error");
+  private homePageName = "Home";
+  private editModal: Modal;
+  private syncInterval: number;
 
   constructor(
     private navCtrl: NavController,
@@ -44,6 +53,10 @@ export class WikiPage implements OnInit {
     domSanitizer: DomSanitizer,
     elementRef: ElementRef,
     renderer: Renderer) {
+
+    this.searchTerm = "";
+    this.pageTitle = this.settings.getLastPageName() || this.homePageName;
+    this.isHome = true;
 
     //allow ema: links
     var realSanitize = domSanitizer.sanitize;
@@ -60,30 +73,71 @@ export class WikiPage implements OnInit {
       }
       return true;
     });
+
+    this.applySettings();
   }
 
-  ngOnInit() {
-    this.gotoPage("Home");
-
-    //start auto-sync
-    this.planNextAutoSync()
+  ionViewDidLoad() {
+    //go to the last visited page, or "Home"
+    var firstPage = this.homePageName;
+    if (this.settings.getRestoreLast()) {
+      firstPage = this.settings.getLastPageName() || this.homePageName;
+    }
+    this.gotoPage(firstPage);
   }
 
-  private planNextAutoSync() {
-    this.settings.getSyncMinutes().then((syncMinutes: number) => {
-        setTimeout(() => {
+  ionViewWillEnter() {
+    //re-evaluate settings
+    this.applySettings();
+    //(re)start auto-sync
+    this.planAutoSync()
+  }
+
+  ionViewDidLeave() {
+    clearInterval(this.syncInterval);
+  }
+
+  private applySettings() {
+    this.styleGrey = this.settings.getStyle() === "Grey";
+    this.showSearch = this.settings.getShowSearch();
+  }
+
+  private planAutoSync() {
+    let isHandlingInterval = false;
+    this.syncInterval = setInterval(() => {
+      if (isHandlingInterval) {
+        //after a while inactivity, the browser apparently will fire the interval for all "forgotten" periods
+        return;
+      }
+      isHandlingInterval = true;
+      var syncMinutes = this.settings.getSyncMinutes();
+      var shouldSync = true;
+      if (this.lastSync) {
+        var diff = new Date().getTime() - this.lastSync.getTime();
+        var diffMinutes = diff / 60000
+
+        shouldSync = diffMinutes >= syncMinutes;
+      }
+
+      if (shouldSync) {
+        if (this.dropboxAuthService.hasAuthenticatedWithDropbox()) {
           this.sync();
-          this.planNextAutoSync();
-        }, syncMinutes * 60 * 1000);
-      });
+        }
+      }
+      isHandlingInterval = false;
+    }, 10000);
   }
 
   private processLinkClick(href: string) {
+    href = decodeURI(href);
     var emaLinkRegex = /^ema:(.*)$/;
     var m = emaLinkRegex.exec(href);
     if (m) {
       var pageName = m[1];
       this.gotoPage(pageName);
+    } else {
+      window.open(href, "_system");
+      this.showToast("Opening external link...");
     }
   }
 
@@ -98,16 +152,28 @@ export class WikiPage implements OnInit {
     return Promise.resolve();
   }
 
-  private gotoPage(pageName: string): Promise<any> {
+  goHome(): Promise<any> {
+    return this.gotoPage(this.homePageName);
+  }
 
-    this.pageTitle = pageName;
+  private gotoPage(pageName: string): Promise<any> {
     return this.wikiPageService.getPage(pageName)
-      .then((file: WikiFile) => {
-        this.html = file.parsed;
-        this.pageStack.push(file);
-        this.canGoBack = this.pageStack.length > 1;
-      })
+      .then((file: WikiFile) => this.showPage(file))
       .catch(err => this.log("Error loading page " + pageName, err));
+  }
+
+  private showPage(page: WikiFile) {
+    this.pageTitle = page.pageName;
+    this.html = page.parsed;
+    this.pageStack.push(page);
+    this.canGoBack = this.pageStack.length > 1;
+    this.isHome = page.pageName === this.homePageName;
+    this.canEdit = !page.isSearchResults;
+
+    if (!page.isSearchResults) {
+      //keep last page for next time the wiki is started
+      this.settings.setLastPageName(page.pageName);
+    }
   }
 
   private hideLoading() {
@@ -120,7 +186,7 @@ export class WikiPage implements OnInit {
   private log(what: string, err: any): void {
     what = what || "";
     if (typeof (what) !== "string") {
-      what = JSON.stringify(what);
+      what = JSON.stringify(this.serializeError(what));
     }
     this.showToast(what);
     console.log(what);
@@ -136,24 +202,51 @@ export class WikiPage implements OnInit {
     toast.present();
   }
 
+  search() {
+    if (this.searchTerm) {
+      this.showLoading("Searching...")
+        .then(() => this.wikiPageService.getSearchResultsFor(this.searchTerm))
+        .then((result: WikiFile) => this.showPage(result))
+        .catch(err => this.log("Error while searching", err))
+        .then(() => this.hideLoading());
+    }
+  }
+
   onBackButton() {
-    this.pageStack.pop(); //current page
-    let previousPage: string;
-    if (this.pageStack.length > 0) {
-      previousPage = this.pageStack.pop().pageName;
-    } else {
-      previousPage = "Home";
+    if (this.editModal) {
+      this.editModal.instance.onBackButton();
+      return;
     }
 
-    this.gotoPage(previousPage);
+    var currentPage = this.pageStack.pop(); //current page
+
+    if (!this.canGoBack) {
+      if (currentPage.pageName !== this.homePageName) {
+        this.goHome();
+      } else {
+        MyApp.instance.exit();
+      }
+      return;
+    }
+
+    //go back within wiki
+    if (this.pageStack.length > 0) {
+      var previousPage = this.pageStack.pop();
+      if (previousPage.isSearchResults) {
+        this.showPage(previousPage);
+      } else {
+        this.gotoPage(previousPage.pageName);
+      }
+    } 
   }
 
   edit() {
     var currentPage = this.pageStack.peek();
-    var editModal = this.modalController.create(EditPage, {
+    this.editModal = this.modalController.create(EditPage, {
       page: currentPage
     });
-    editModal.onDidDismiss(data => {
+    this.editModal.onDidDismiss(data => {
+      this.editModal = null;
       if (!data.cancel) {
         currentPage.contents = data.pageContent;
         this.showLoading("Saving " + currentPage.pageName)
@@ -163,7 +256,7 @@ export class WikiPage implements OnInit {
           .then(() => this.hideLoading());
       }
     });
-    editModal.present();
+    this.editModal.present();
   }
 
   private refresh(): Promise<any> {
@@ -175,18 +268,20 @@ export class WikiPage implements OnInit {
     if (this.isSyncing) {
       return;
     }
-    this.syncProgress = "..%";
+    this.syncProgress = "0%";
     this.isSyncing = true;
+    this.lastSync = new Date();
 
     var subscription;
+    var syncInfo: SyncState;
     this.dropboxAuthService.getDropboxAuthentication()
       .then((auth: IDropboxAuth) => {
-        var syncInfo = this.dropboxSyncService.syncFiles(auth);
+        syncInfo = this.dropboxSyncService.syncFiles(auth);
 
         var syncLabel: string;
         subscription = syncInfo.progress.subscribe(next => {
           if (next.label && next.label !== syncLabel) {
-            this.showToast(next.label);
+            //this.showToast(next.label);
             syncLabel = next.label;
           }
           if (next.total) {
@@ -199,6 +294,9 @@ export class WikiPage implements OnInit {
       })
       .catch(err => this.log("Error while synchronizing", err))
       .then(() => {
+        if (syncInfo && syncInfo.failedFiles.length > 0) {
+          this.log("Sync finished with errors", syncInfo.failedFiles);
+        }
         if (subscription) {
           subscription.unsubscribe();
         }

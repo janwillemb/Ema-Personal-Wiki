@@ -53,8 +53,6 @@ export class WikiStorage {
             });
     }
 
-    
-
     /*
         Get a file from the wiki storage
     */
@@ -62,7 +60,15 @@ export class WikiStorage {
         var promise: Promise<any>;
         if (this.useSdCard) {
             //read the file from sd card (that is, start reading and harvest the promise)
-            promise = File.readAsText(this.getPersonalWikiDir(), fileName);
+            promise = new Promise((resolve, reject) => {
+                var readAction = () =>
+                    File.readAsText(this.getPersonalWikiDir(), fileName)
+                        .then((contents) => resolve(contents));
+
+                readAction()
+                    //retry after 500 ms on failure
+                    .catch(err => setTimeout(() => readAction().catch(err => reject(err)), 500));
+            });
         } else {
             //read the file from sqlite storage
             promise = this.storage.get(this.personalWikiPrefix + fileName);
@@ -97,17 +103,7 @@ export class WikiStorage {
 
     delete(fileName: string): Promise<any> {
         if (this.useSdCard) {
-            return File.checkFile(this.getPersonalWikiDir(), fileName)
-                .catch(err => false)
-                .then((exists: boolean) => {
-                    var result: Promise<any>;
-                    if (exists) {
-                        result = File.removeFile(this.storageDir, fileName);
-                    } else {
-                        result = Promise.resolve();
-                    }
-                    return result;
-                });
+            return File.removeFile(this.getPersonalWikiDir(), fileName);
         } else {
             return this.storage.remove(this.personalWikiPrefix + fileName);
         }
