@@ -16,11 +16,13 @@ export class MyApp {
     styleGrey: boolean;
     static instance: MyApp;
 
+    private unregisterBackButtonAction: Function;
+
     constructor(
-        private platform: Platform, 
-        private settings: Settings, 
+        private platform: Platform,
+        private settings: Settings,
         private menu: MenuController) {
-            
+
         platform.ready().then(() => {
             StatusBar.styleDefault();
 
@@ -30,10 +32,26 @@ export class MyApp {
                 setTimeout(() => Splashscreen.hide(), 100);
             });
 
-            platform.registerBackButtonAction(() => this.onBackButton(), Number.MAX_VALUE);
+            platform.pause.subscribe(() => this.unregisterBackButton());
+            platform.resume.subscribe(() => this.registerBackButton());
+
+            this.registerBackButton();
         });
 
         MyApp.instance = this;
+    }
+
+    private registerBackButton() {
+        if (!this.unregisterBackButtonAction) {
+            this.unregisterBackButtonAction = this.platform.registerBackButtonAction(() => this.onBackButton(), Number.MAX_VALUE);
+        }
+    }
+
+    private unregisterBackButton() {
+        if (this.unregisterBackButtonAction) {
+            this.unregisterBackButtonAction();
+            this.unregisterBackButtonAction = null;
+        }
     }
 
     private onBackButton() {
@@ -63,6 +81,16 @@ export class MyApp {
 
     exit() {
         this.platform.exitApp();
+    }
+
+    minimize() {
+        this.unregisterBackButton(); //otherwise resuming will have an unresponsive backbutton
+        var w: any = window;
+        if (w && w.plugins && w.plugins.appMinimize && w.plugins.appMinimize.minimize) {
+            w.plugins.appMinimize.minimize();
+        } else {
+            this.exit();
+        }
     }
 
 }

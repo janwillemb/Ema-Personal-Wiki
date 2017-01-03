@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<widget android-versionCode="12" id="nl.janwillemboer.ema.xamarin" version="3.0.4" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+<widget android-versionCode="13" id="nl.janwillemboer.ema.xamarin" version="3.0.5" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
     <name>Personal Wiki</name>
     <description>Ema Personal Wiki</description>
     <author email="ema@janwillemboer.nl" href="http://www.janwillemboer.nl/">Jan Willem Boer</author>
@@ -66,4 +66,5 @@
     <plugin name="cordova-plugin-splashscreen" spec="~4.0.1" />
     <icon src="resources\android\icon\drawable-xhdpi-icon.png" />
     <plugin name="cordova-sqlite-storage" spec="~2.0.0" />
+    <plugin name="cordova-plugin-appminimize" spec="https://github.com/tomloprod/cordova-plugin-appminimize.git" />
 </widget>

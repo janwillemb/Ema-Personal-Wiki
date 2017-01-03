@@ -213,7 +213,7 @@ export class WikiPage {
     }
   }
 
-  onBackButton() {
+  onBackButton(neverQuit?: boolean) {
     if (this.editModal) {
       this.editModal.instance.onBackButton();
       return;
@@ -222,10 +222,10 @@ export class WikiPage {
     var currentPage = this.pageStack.pop(); //current page
 
     if (!this.canGoBack) {
-      if (currentPage.pageName !== this.homePageName) {
+      if (neverQuit || currentPage.pageName !== this.homePageName) {
         this.goHome();
       } else {
-        MyApp.instance.exit();
+        MyApp.instance.minimize();
       }
       return;
     }
@@ -238,13 +238,13 @@ export class WikiPage {
       } else {
         this.gotoPage(previousPage.pageName);
       }
-    } 
+    }
   }
 
   onTap() {
     var tapTime = new Date();
     if (this.lastTap) {
-      if (tapTime.getTime() - this.lastTap.getTime() < 500){
+      if (tapTime.getTime() - this.lastTap.getTime() < 500) {
         //double-tap
         this.edit();
       }
@@ -260,12 +260,20 @@ export class WikiPage {
     this.editModal.onDidDismiss(data => {
       this.editModal = null;
       if (!data.cancel) {
-        currentPage.contents = data.pageContent;
-        this.showLoading("Saving " + currentPage.pageName)
-          .then(() => this.wikiPageService.savePage(currentPage))
-          .then(() => this.refresh())
-          .catch(err => this.log("Error saving page " + currentPage.pageName, err))
-          .then(() => this.hideLoading());
+        if (data.delete) {
+          this.showLoading("Deleting " + currentPage.pageName)
+            .then(() => this.wikiPageService.deletePage(currentPage))
+            .then(() => this.onBackButton(true))
+            .catch(err => this.log("Error deleting page " + currentPage.pageName, err))
+            .then(() => this.hideLoading());
+        } else {
+          currentPage.contents = data.pageContent;
+          this.showLoading("Saving " + currentPage.pageName)
+            .then(() => this.wikiPageService.savePage(currentPage))
+            .then(() => this.refresh())
+            .catch(err => this.log("Error saving page " + currentPage.pageName, err))
+            .then(() => this.hideLoading());
+        }
       }
     });
     this.editModal.present();

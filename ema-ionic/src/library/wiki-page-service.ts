@@ -37,6 +37,10 @@ export class WikiPageService {
         return this.wikiStorage.save(this.getPageFileName(page.pageName), page.contents);
     }
 
+    deletePage(page: WikiFile): Promise<any> {
+        return this.wikiStorage.delete(this.getPageFileName(page.pageName));
+    }
+
     /**
      * returns a virtual wiki page with search results 
      * */

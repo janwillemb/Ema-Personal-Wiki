@@ -40,6 +40,22 @@ export class EditPage {
         this.viewController.dismiss({ pageContent: this.pageContent });
     }
 
+    delete() {
+        let confirm = this.alertController.create({
+            title: "Delete page",
+            message: "Do you really want to delete this page?",
+            buttons: [{
+                text: "Yes",
+                handler: () => {
+                    this.viewController.dismiss({ delete: true });
+                }
+            }, {
+                text: "No"
+            }]
+        });
+        confirm.present();
+    }
+
     help() {
         this.navController.push(HelpPage);
     }
