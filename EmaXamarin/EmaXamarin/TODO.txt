@@ -1,7 +1,0 @@
-﻿- encoding from desktop wiki
-- deep linking by intent?
-- update windows wiki with portable library
-- website
-- sync with other cloud services
-- apk size
-- provide snippets

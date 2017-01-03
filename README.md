@@ -8,10 +8,8 @@ It has two versions: an Android and a Windows version, which are synchronized wi
 
 The repository has:
 
-- AndroidClient: current production version, quite old now, and with some issues
 - DesktopClient: Windows client
-- EmaXamarin: the new mobile client, developed in Xamarin.Forms, with an Android client for now. This one is available in Beta in the Google Play store.
+- ema-ionic: the new mobile client, developed in Xamarin.Forms, with an Android client for now. This one is available in Beta in the Google Play store.
 - Installer: the installer for the Windows client
-- ema-man: images for the manual. Good that I have these, I should update the dead links to images in the manual to these.
 - lib: dll's needed for the Windows client (from the pre-nuget era)
 
