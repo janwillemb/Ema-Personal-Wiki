@@ -39,6 +39,7 @@ export class WikiPage {
   private homePageName = "Home";
   private editModal: Modal;
   private syncInterval: number;
+  private lastTap: Date;
 
   constructor(
     private navCtrl: NavController,
@@ -238,6 +239,17 @@ export class WikiPage {
         this.gotoPage(previousPage.pageName);
       }
     } 
+  }
+
+  onTap() {
+    var tapTime = new Date();
+    if (this.lastTap) {
+      if (tapTime.getTime() - this.lastTap.getTime() < 500){
+        //double-tap
+        this.edit();
+      }
+    }
+    this.lastTap = tapTime;
   }
 
   edit() {

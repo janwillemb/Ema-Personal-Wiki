@@ -24,7 +24,7 @@
   </ion-navbar>
 </ion-header>
 
-<ion-content padding>
+<ion-content padding (tap)="onTap()">
   <span *ngIf="!html" class="emptyPageContent">(edit the page to add content)</span>
   <div [innerHTML]="html"></div>
 </ion-content>
