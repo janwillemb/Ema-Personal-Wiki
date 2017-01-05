@@ -4,7 +4,8 @@ import { Injectable } from '@angular/core';
 @Injectable()
 export class Settings {
 
-    remoteWikiDirectory: string = "/PersonalWiki/";
+    private remoteWikiDirectory: string = "/PersonalWiki/";
+    private localWikiDirectory: string;
     private initializePromise: Promise<any>;
     private syncMinutes: number;
     private style: string;
@@ -31,6 +32,7 @@ export class Settings {
         promises.push(this.storage.get("lastPageName").then(value => this.lastPageName = value));
         promises.push(this.storage.get("restoreLast").then(value => this.restoreLast = value));
         promises.push(this.storage.get("useCurly").then(value => this.useCurly = value));
+        promises.push(this.storage.get("localWikiDirectory").then(value => this.localWikiDirectory = value));
         return Promise.all(promises);
     }
 
@@ -45,6 +47,15 @@ export class Settings {
     setLastPageName(value: string): Promise<any> {
         this.lastPageName = value;
         return this.storage.set("lastPageName", value);
+    }
+
+    getLocalWikiDirectory(): string {
+        return this.localWikiDirectory || "PersonalWiki";
+    }
+
+    setLocalWikiDirectory(value: string): Promise<any> {
+        this.localWikiDirectory = value;
+        return this.storage.set("localWikiDirectory", value);
     }
 
     getSyncMinutes(): number {

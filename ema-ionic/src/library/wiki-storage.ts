@@ -1,3 +1,4 @@
+import { Settings } from './settings';
 import { LoggingService } from './logging-service';
 import { StoredFile } from './stored-file';
 import { Injectable } from '@angular/core';
@@ -11,12 +12,12 @@ export class WikiStorage {
 
     private useSdCard: boolean;
     private storageDir: string;
-    private readonly personalWikiKey: string = "PersonalWiki";
-    private readonly personalWikiPrefix: string = this.personalWikiKey + ".";
+    private readonly personalWikiPrefix: string = "PersonalWiki.";
     private checksum = require("checksum");
 
     constructor(
         private loggingService: LoggingService,
+        private settings: Settings,
         private storage: Storage) {
 
         this.useSdCard = cordova && cordova.file;
@@ -25,9 +26,8 @@ export class WikiStorage {
         }
     }
 
-
     private getPersonalWikiDir(): string {
-        return this.storageDir + this.personalWikiKey;
+        return this.storageDir + this.settings.getLocalWikiDirectory();
     }
 
     listFiles(): Promise<string[]> {
@@ -36,7 +36,7 @@ export class WikiStorage {
             .then(() => {
                 if (this.useSdCard) {
                     //list files in the sd card dir
-                    return File.listDir(this.storageDir, this.personalWikiKey)
+                    return File.listDir(this.storageDir, this.settings.getLocalWikiDirectory())
                         .then((entries: Entry[]) => entries
                             //filter: only files
                             .filter(x => x.isFile)
@@ -109,18 +109,25 @@ export class WikiStorage {
         }
     }
 
+    move(oldDir: string, newDir: string) {
+        if (this.useSdCard) {
+            return File.moveDir(this.storageDir, oldDir, this.storageDir, newDir);
+        }
+        return Promise.resolve();
+    }
+
     /**
      * make sure the directory exists
      */
     private initialize(): Promise<any> {
         if (this.useSdCard) {
-            return File.checkDir(this.storageDir, this.personalWikiKey)
+            return File.checkDir(this.storageDir, this.settings.getLocalWikiDirectory())
                 .then(exists => {
                     if (!exists) {
                         throw "doesn't exist";
                     }
                 })
-                .catch(err => File.createDir(this.storageDir, this.personalWikiKey, false));
+                .catch(err => File.createDir(this.storageDir, this.settings.getLocalWikiDirectory(), false));
         } else {
             return Promise.resolve();
         }

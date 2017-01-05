@@ -64,17 +64,23 @@ export class DropboxSyncService {
 
                 //files, not changed locally, but changed or deleted remotely, have to been downloaded/deleted
                 var filesToDownload = state.remoteChangedFiles.filter(x => {
-                    var existsLocally = state.allLocalFiles.find(y => this.ignoreCase.equals(x.name, y.fileName));
-                    return x.deleted && existsLocally || !x.deleted && !existsLocally;
+                    var wasChangedLocally = state.localChangedFiles.find(y => this.ignoreCase.equals(x.name, y.fileName));
+                    var deletedLocally = state.localDeletedFiles.find(y => this.ignoreCase.equals(x.name, y.name));
+                    return !wasChangedLocally && !deletedLocally;
                 });
 
                 //files changed locally, but unchanged remotely, can be uploaded safely
                 var filesToUpload = state.localChangedFiles.filter(x => {
-                    return !state.remoteChangedFiles.find(y => this.ignoreCase.equals(y.name, x.fileName) && !y.deleted);
+                    var remoteChange = state.remoteChangedFiles.find(y => this.ignoreCase.equals(y.name, x.fileName));
+                    var wasChangedRemotely = !!remoteChange;
+                    var wasDeletedRemotely = wasChangedRemotely && remoteChange.deleted;
+
+                    return !wasChangedRemotely || wasDeletedRemotely; //ignore remote delete in case of local change
                 });
                 //files deleted locally, but unchanged remotely, can be deleted safely
                 var filesToUploadDeletion = state.localDeletedFiles.filter(x => {
-                    return !state.remoteChangedFiles.find(y => this.ignoreCase.equals(y.name, x.name));
+                    var wasChangedRemotely = state.remoteChangedFiles.find(y => this.ignoreCase.equals(y.name, x.name));
+                    return !wasChangedRemotely;
                 });
                 //(files, deleted locally and changed remotely, will be re-downloaded to the local storage. So be it.)
                 //files, changed on both sides, have to be merged
@@ -82,7 +88,8 @@ export class DropboxSyncService {
                     if (x.deleted) {
                         return false; //just re-upload it in case of deletion (deletions are already excluded in the "filesToUpload" check)
                     }
-                    return state.localChangedFiles.find(y => this.ignoreCase.equals(x.name, y.fileName));
+                    var wasChangedLocally = state.localChangedFiles.find(y => this.ignoreCase.equals(x.name, y.fileName));
+                    return wasChangedLocally;
                 });
 
                 //create the promises
@@ -196,7 +203,7 @@ export class DropboxSyncService {
                 let update2 = localFile.contents;
                 let merged = this.mergeText.merge(origin, update1, update2);
 
-                return this.wikiStorage.save(localFile.fileName, merged.toMarkdown());
+                return this.wikiStorage.save(localFile.fileName, merged.toString());
             })
             //merge done, now upload result to dropbox
             .then(() => this.wikiStorage.getFileContents(localFile.fileName))
@@ -218,5 +225,9 @@ export class DropboxSyncService {
 
     private saveLocalSyncInfo(value: IDropboxEntry[]): Promise<any> {
         return this.storage.set(this.syncInfoStorageKey, value);
+    }
+
+    clearLocalSyncState(): Promise<any> {
+        return this.storage.remove(this.syncInfoStorageKey);
     }
 }

@@ -126,7 +126,7 @@ export class WikiPageService {
     }
 
     private getPageFileName(pageName: string): string {
-        var invalidCharsRegex = /[^\w\-\.]/g;
+        var invalidCharsRegex = this.xRegEx("[^\\w\\-\\.]", "gx");
         return pageName.replace(invalidCharsRegex, "_") + ".txt";
     }
 

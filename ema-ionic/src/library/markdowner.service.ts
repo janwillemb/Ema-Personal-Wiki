@@ -39,7 +39,7 @@ export class MarkdownerService {
             "[^\\]]+" +        // #anything inbetween not being a (single) square bracket
             ")\\]\\]" +         //#end with double square bracket
             ")"        //#close the 'or' group 
-            , "g"); //match multiple times 
+            , "gx"); //match multiple times 
 
         this.usedCurly = this.settings.getUseCurly();
     }
