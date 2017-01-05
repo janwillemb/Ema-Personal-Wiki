@@ -21,6 +21,7 @@ export class SettingsPage {
   restoreLast: boolean;
   useCurly: boolean;
   localWikiDirectory: string;
+  fontSize: number;
 
   constructor(
     private alertController: AlertController,
@@ -38,7 +39,7 @@ export class SettingsPage {
     } else {
       this.syncMinutes = syncMinutesValue;
     }
-
+    this.fontSize = this.settings.getFontSize();
     this.showSearch = this.settings.getShowSearch();
     this.styleName = settings.getStyle();
     this.restoreLast = settings.getRestoreLast();
@@ -48,6 +49,7 @@ export class SettingsPage {
   }
 
   ionViewWillLeave() {
+    this.settings.setFontSize(this.fontSize);
     this.settings.setSyncMinutes(this.syncMinutes);
     this.settings.setShowSearch(this.showSearch);
     this.settings.setRestoreLast(this.restoreLast);
@@ -96,6 +98,18 @@ export class SettingsPage {
   }
 
   clearSyncInfo() {
-    this.settings.removeDropboxAuthInfo();
+    let confirm = this.alertController.create({
+      title: "Forget Dropbox credentials",
+      message: "Do you really want to clear the Dropbox authentication data?",
+      buttons: [{
+        text: "Yes",
+        handler: () => {
+          this.settings.removeDropboxAuthInfo();
+        }
+      }, {
+        text: "No"
+      }]
+    });
+    confirm.present();
   }
 }

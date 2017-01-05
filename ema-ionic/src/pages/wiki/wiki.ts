@@ -6,7 +6,7 @@ import { WikiPageService } from '../../library/wiki-page-service';
 import { LoggingService } from '../../library/logging-service';
 import { EditPage } from '../edit/edit';
 import { Stack } from '../../library/stack';
-import { DomSanitizer } from '@angular/platform-browser';
+import { DomSanitizer, SafeStyle } from '@angular/platform-browser';
 import { WikiFile } from '../../library/wiki-file';
 import { Component, ElementRef, Renderer, SecurityContext } from '@angular/core';
 import { Loading, LoadingController, Modal, ModalController, NavController, ToastController } from 'ionic-angular';
@@ -40,6 +40,7 @@ export class WikiPage {
   private editModal: Modal;
   private syncInterval: number;
   private lastTap: Date;
+  private fontPctStyle: SafeStyle;
 
   constructor(
     private navCtrl: NavController,
@@ -51,7 +52,7 @@ export class WikiPage {
     private toastController: ToastController,
     private loggingService: LoggingService,
     private settings: Settings,
-    domSanitizer: DomSanitizer,
+    private sanitizer: DomSanitizer,
     elementRef: ElementRef,
     renderer: Renderer) {
 
@@ -60,9 +61,9 @@ export class WikiPage {
     this.isHome = true;
 
     //allow ema: links
-    var realSanitize = domSanitizer.sanitize;
-    domSanitizer.sanitize = (context: SecurityContext, value: any): string => {
-      var sanitized = realSanitize.apply(domSanitizer, [context, value]);
+    var realSanitize = sanitizer.sanitize;
+    sanitizer.sanitize = (context: SecurityContext, value: any): string => {
+      var sanitized = realSanitize.apply(sanitizer, [context, value]);
       sanitized = sanitized.replace(/unsafe:ema:/g, "ema:");
       return sanitized;
     };
@@ -101,6 +102,7 @@ export class WikiPage {
   private applySettings() {
     this.styleGrey = this.settings.getStyle() === "Grey";
     this.showSearch = this.settings.getShowSearch();
+    this.fontPctStyle = this.sanitizer.bypassSecurityTrustStyle("font-size: " + this.settings.getFontSize() + "%");
   }
 
   private planAutoSync() {

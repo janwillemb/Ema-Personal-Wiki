@@ -14,6 +14,7 @@ export class Settings {
     private lastPageName: string;
     private restoreLast: boolean;
     private useCurly: boolean;
+    private fontSize: number;
 
     constructor(private storage: Storage) {
         this.initializePromise = this.initialize();
@@ -33,6 +34,7 @@ export class Settings {
         promises.push(this.storage.get("restoreLast").then(value => this.restoreLast = value));
         promises.push(this.storage.get("useCurly").then(value => this.useCurly = value));
         promises.push(this.storage.get("localWikiDirectory").then(value => this.localWikiDirectory = value));
+        promises.push(this.storage.get("fontSize").then(value => this.fontSize = value));
         return Promise.all(promises);
     }
 
@@ -75,6 +77,22 @@ export class Settings {
         }
         this.syncMinutes = value;
         return this.storage.set("syncMinutes", value);
+    }
+
+    getFontSize(): number {
+        var value = this.fontSize;
+        if (!value || isNaN(value)) {
+            return 100;
+        }
+        return <number>value;
+    }
+
+    setFontSize(value: number): Promise<any> {
+        if (typeof (value) === "string") {
+            value = parseInt(value, 10);
+        }
+        this.fontSize = value;
+        return this.storage.set("fontSize", value);
     }
 
     setRestoreLast(value: boolean): Promise<any> {

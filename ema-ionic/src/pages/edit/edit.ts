@@ -1,3 +1,4 @@
+import { DomSanitizer, SafeStyle } from '@angular/platform-browser';
 import { ViewChild } from '@angular/core/src/metadata/di';
 import { HelpPage } from '../help/help';
 import { Settings } from '../../library/settings';
@@ -14,12 +15,14 @@ export class EditPage {
     pageTitle: string;
     orginalContent: string;
     styleGrey: boolean;
+    fontPctStyle: SafeStyle;
 
     @ViewChild("pageContentTextArea") pageContentTextArea;
 
     constructor(
         navParams: NavParams,
         settings: Settings,
+        private sanitizer: DomSanitizer,
         private alertController: AlertController,
         private navController: NavController,
         private viewController: ViewController) {
@@ -30,6 +33,7 @@ export class EditPage {
         this.orginalContent = this.pageContent;
 
         this.styleGrey = settings.getStyle() === "Grey";
+        this.fontPctStyle = this.sanitizer.bypassSecurityTrustStyle("font-size: " + settings.getFontSize() + "%");
     }
 
     ionViewDidEnter() {
