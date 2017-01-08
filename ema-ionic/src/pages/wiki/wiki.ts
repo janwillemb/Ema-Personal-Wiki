@@ -250,7 +250,7 @@ export class WikiPage {
       return;
     }
 
-    var currentPage = this.pageStack.pop(); //current page
+    var currentPage = this.getCurrentPage(); 
 
     if (!this.canGoBack) {
       if (neverQuit || currentPage.pageName !== this.homePageName) {
