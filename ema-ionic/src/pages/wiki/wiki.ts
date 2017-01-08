@@ -1,3 +1,4 @@
+import { TagPage } from '../tag/tag';
 import { SyncState } from '../../library/sync-state';
 import { MyApp } from '../../app/app.component';
 import { Settings } from '../../library/settings';
@@ -8,8 +9,8 @@ import { EditPage } from '../edit/edit';
 import { Stack } from '../../library/stack';
 import { DomSanitizer, SafeStyle } from '@angular/platform-browser';
 import { WikiFile } from '../../library/wiki-file';
-import { Component, ElementRef, Renderer, SecurityContext } from '@angular/core';
-import { Loading, LoadingController, Modal, ModalController, NavController, ToastController } from 'ionic-angular';
+import { Component, ElementRef, Renderer, SecurityContext, ViewChild } from '@angular/core';
+import { Content, Loading, LoadingController, Modal, ModalController, NavController, ToastController } from 'ionic-angular';
 import { DropboxAuthService } from "../../library/dropbox-auth.service";
 import { IDropboxAuth } from "../../library/idropbox-auth";
 declare function require(name: string);
@@ -20,9 +21,11 @@ declare function require(name: string);
 })
 export class WikiPage {
   html = "";
+  tags: string[];
   canGoBack = false;
   pageTitle: string;
   isHome: boolean;
+  isSearch: boolean;
 
   isSyncing: boolean;
   syncProgress: string;
@@ -32,6 +35,8 @@ export class WikiPage {
   searchTerm: string;
   showSearch: boolean;
   canEdit: boolean;
+
+  @ViewChild(Content) wikiContentElement: Content;
 
   private pageStack = new Stack<WikiFile>();
   private loading: Loading;
@@ -93,6 +98,11 @@ export class WikiPage {
     this.applySettings();
     //(re)start auto-sync
     this.planAutoSync()
+    //if there is a page request, execute it
+    if (this.wikiPageService.requestedPageName) {
+      this.gotoPage(this.wikiPageService.requestedPageName);
+      this.wikiPageService.requestedPageName = null;
+    }
   }
 
   ionViewDidLeave() {
@@ -103,6 +113,9 @@ export class WikiPage {
     this.styleGrey = this.settings.getStyle() === "Grey";
     this.showSearch = this.settings.getShowSearch();
     this.fontPctStyle = this.sanitizer.bypassSecurityTrustStyle("font-size: " + this.settings.getFontSize() + "%");
+    if (this.wikiContentElement) {
+      this.wikiContentElement.resize();
+    }
   }
 
   private planAutoSync() {
@@ -165,13 +178,29 @@ export class WikiPage {
       .catch(err => this.log("Error loading page " + pageName, err));
   }
 
+  gotoTag(tag: string) {
+    this.navCtrl.push(TagPage, {
+      tag
+    });
+  }
+
   private showPage(page: WikiFile) {
     this.pageTitle = page.pageName;
     this.html = page.parsed;
-    this.pageStack.push(page);
+
+    var lastPageOnStack = this.pageStack.peek();
+    if (!lastPageOnStack || lastPageOnStack.pageName !== page.pageName) {
+      this.pageStack.push(page);
+    }
     this.canGoBack = this.pageStack.length > 1;
     this.isHome = page.pageName === this.homePageName;
     this.canEdit = !page.isSearchResults;
+    this.isSearch = page.isSearchResults;
+    if (page.tags && page.tags.length > 0) {
+      this.tags = page.tags;
+    } else {
+      this.tags = null;
+    }
 
     if (!page.isSearchResults) {
       //keep last page for next time the wiki is started
@@ -254,8 +283,12 @@ export class WikiPage {
     this.lastTap = tapTime;
   }
 
+  private getCurrentPage() {
+    return this.pageStack.peek();
+  }
+
   edit() {
-    var currentPage = this.pageStack.peek();
+    var currentPage = this.getCurrentPage();
     this.editModal = this.modalController.create(EditPage, {
       page: currentPage
     });
@@ -283,6 +316,9 @@ export class WikiPage {
 
   private refresh(): Promise<any> {
     var currentPage = this.pageStack.pop();
+    if (currentPage.isSearchResults) {
+      return Promise.resolve();
+    }
     return this.gotoPage(currentPage.pageName);
   }
 

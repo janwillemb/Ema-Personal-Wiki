@@ -24,20 +24,29 @@
   </ion-navbar>
 </ion-header>
 
-<ion-content padding (tap)="onTap()" [style]="fontPctStyle">
-  <span *ngIf="!html" class="emptyPageContent">(edit the page to add content)</span>
-  <div [innerHTML]="html"></div>
+<ion-content (tap)="onTap()" [style]="fontPctStyle">
+  <ion-toolbar *ngIf="tags && tags.length > 0" class="tagsToolbar">
+    <ion-buttons>
+      <button ion-button outline *ngFor="let tag of tags" (click)="gotoTag(tag)">{{tag}}</button>
+    </ion-buttons>
+  </ion-toolbar>
+  <div padding>
+    <span *ngIf="!html" class="emptyPageContent">(edit the page to add content)</span>
+    <div [innerHTML]="html"></div>
+  </div>
 </ion-content>
 
-<ion-footer *ngIf="showSearch">
-  <table>
-    <tr>
-      <td>
-        <ion-searchbar [(ngModel)]="searchTerm" placeholder="regular expression"></ion-searchbar>
-      </td>
-      <td>
-      <button ion-button color="light" (click)="search()">Search</button>
-      </td>
-    </tr>
-  </table>
+<ion-footer *ngIf="showSearch && !isSearch">
+  <ion-toolbar>
+    <table>
+      <tr>
+        <td>
+          <ion-searchbar [(ngModel)]="searchTerm" placeholder="regular expression"></ion-searchbar>
+        </td>
+        <td>
+          <button ion-button color="light" (click)="search()">Search</button>
+        </td>
+      </tr>
+    </table>
+  </ion-toolbar>
 </ion-footer>

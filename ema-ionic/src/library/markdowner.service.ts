@@ -1,3 +1,6 @@
+import { WikiFile } from './wiki-file';
+import { StoredFile } from './stored-file';
+import { TagIndexService } from './tag-index.service';
 import { Settings } from './settings';
 import { Queue } from './queue';
 import { LoggingService } from './logging-service';
@@ -13,7 +16,11 @@ export class MarkdownerService {
     private htmlTagsRegex = this.xRegEx("\<a\s.+?\<\/a\>|\<[^\>]+\>", "g");
     private usedCurly: boolean;
 
-    constructor(private loggingService: LoggingService, private settings: Settings) {
+    constructor(
+        private loggingService: LoggingService,
+        private tagIndexService: TagIndexService,
+        private settings: Settings) {
+
         this.initializeRegex();
     }
 
@@ -44,12 +51,17 @@ export class MarkdownerService {
         this.usedCurly = this.settings.getUseCurly();
     }
 
-    process(name: string, markdown: string): Promise<string> {
+    process(storedFile: StoredFile): Promise<WikiFile> {
         const emaPlaceholder = "<ema-placeholder>";
 
         return new Promise((resolve, reject) => {
             try {
-                var markedDown = this.marked(markdown);
+                //first remove the tags from the content
+                var tagsFromContent = this.tagIndexService.separateTagsFromContent(storedFile.contents);
+                var tags = tagsFromContent.tags;
+
+                //do markdown
+                var markedDown = this.marked(tagsFromContent.strippedContent);
 
                 //hide html from the resulting text, because the HTML is highly likely
                 //to contain text that will be recognized as wikiwords (links for example)
@@ -69,10 +81,13 @@ export class MarkdownerService {
                     return match; //new wikiworded link
                 });
 
-                resolve(processed);
+                var result = new WikiFile(storedFile.contents, processed);
+                result.tags = tags;
+                resolve(result);
             } catch (err) {
                 this.loggingService.log("Error markdowning " + name, err);
-                resolve("<strong>File could not be parsed</strong><pre>" + markdown + "</pre>");
+                var result = new WikiFile(storedFile.contents, "<strong>File could not be parsed</strong><pre>" + storedFile.contents + "</pre>");
+                resolve(result);
             }
         });
     }
@@ -95,7 +110,9 @@ export class MarkdownerService {
         var wikiwordByDoubleSquare = <string>arguments[4];
         var wikiword = wikiwordByCase || wikiwordByCurly || wikiwordByDoubleSquare;
 
-        return MarkdownerService.createWikiLink(wikiword);
+        var wikiLink = MarkdownerService.createWikiLink(wikiword);
+
+        return wikiLink;
     }
 
     static createWikiLink(wikiword: string) {

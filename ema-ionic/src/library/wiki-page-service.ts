@@ -9,7 +9,9 @@ declare function require(name: string);
 
 @Injectable()
 export class WikiPageService {
-    xRegEx = require("xregexp");
+    requestedPageName: string;
+    
+    private xRegEx = require("xregexp");
 
     constructor(
         private wikiStorage: WikiStorage,
@@ -23,14 +25,12 @@ export class WikiPageService {
                 this.loggingService.log("Error getting " + name + ".txt from store", err);
                 return new StoredFile("", "");
             })
-            //make it a wiki file 
-            .then(file => new WikiFile(name, file.contents || ""))
             //convert  the markdown to html
-            .then((file: WikiFile) =>
-                this.markdownerService.process(name, file.contents).then((parsed: string) => {
-                    file.parsed = parsed;
-                    return file;
-                }));
+            .then(storedFile => this.markdownerService.process(storedFile))
+            .then(wikiFile => {
+                wikiFile.pageName = name;
+                return wikiFile;
+            });
     }
 
     savePage(page: WikiFile): Promise<any> {
@@ -59,15 +59,14 @@ export class WikiPageService {
                     return 1;
                 }))
             .then((results: SearchResult[]) => {
-                var page = new WikiFile(query, "");
-
                 var divs = results.map(x => {
                     var pageLink = MarkdownerService.createWikiLink(x.pageName);
                     return "<div class='search-result'><div class='search-result-title'>" + pageLink + "</div>" +
                         "<div class='search-result-snippet'>..." + x.snippet + "...</div></div>";
                 });
 
-                page.parsed = divs.join("<hr/>");
+                var page = new WikiFile("", divs.join("<hr/>"));
+                page.pageName = query;
 
                 if (divs.length === 0) {
                     page.parsed = "(no results found)";
@@ -130,7 +129,7 @@ export class WikiPageService {
         return pageName.replace(invalidCharsRegex, "_") + ".txt";
     }
 
-    private getPageNameFromFile(fileName: string): string {
+    getPageNameFromFile(fileName: string): string {
         var page = fileName;
         return page.substring(0, page.length - ".txt".length);
     }

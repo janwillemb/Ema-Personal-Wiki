@@ -9,6 +9,7 @@
 <ion-content>
   <ion-list>
     <button ion-item (click)="clearSyncInfo()">Forget Dropbox credentials</button>
+    <button ion-item (click)="buildTagIndex()">Rebuild tag index</button>
     <ion-item>
       <ion-label>Sync frequency</ion-label>
       <ion-input type="number" placeholder="10 minutes" [(ngModel)]="syncMinutes"></ion-input>

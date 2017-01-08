@@ -1,3 +1,4 @@
+import { TagIndexService } from '../../library/tag-index.service';
 import { WikiStorage } from '../../library/wiki-storage';
 import { LoggingService } from '../../library/logging-service';
 import { IDropboxAuth } from '../../library/idropbox-auth';
@@ -28,6 +29,7 @@ export class SettingsPage {
     private navCtrl: NavController,
     private settings: Settings,
     private wikiStorage: WikiStorage,
+    private tagIndexService: TagIndexService,
     private loadingController: LoadingController,
     private loggingService: LoggingService,
     private syncService: DropboxSyncService,
@@ -95,6 +97,21 @@ export class SettingsPage {
         .then(() => loading.dismiss());
     }
 
+  }
+
+  buildTagIndex() {
+    var loading = this.loadingController.create({ content: "Rebuilding tag index..." });
+    loading.present()
+      .then(() => this.tagIndexService.buildIndex())
+      .catch(err => {
+        this.loggingService.log("Error building tag index", err);
+          var alert = this.alertController.create({
+            title: "Create tag index failed",
+            message: "Creating the tag index failed."
+          });
+          return alert.present();
+      })
+      .then(() => loading.dismiss());
   }
 
   clearSyncInfo() {

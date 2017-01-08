@@ -1,3 +1,5 @@
+import { TagPage } from '../pages/tag/tag';
+import { TagIndexService } from '../library/tag-index.service';
 import { HelpPage } from '../pages/help/help';
 import { SettingsPage } from '../pages/settings/settings';
 import { DropboxSyncService } from '../library/dropbox-sync-service';
@@ -23,6 +25,7 @@ import { MyApp } from './app.component';
     SettingsPage,
     EditPage,
     HelpPage,
+    TagPage,
     LogsPage,
     WikiPage
   ],
@@ -35,6 +38,7 @@ import { MyApp } from './app.component';
     SettingsPage,
     LogsPage,
     HelpPage,
+    TagPage,
     EditPage,
     WikiPage
   ],
@@ -47,6 +51,7 @@ import { MyApp } from './app.component';
     MarkdownerService,
     Settings,
     Storage,
+    TagIndexService,
     WikiStorage,
     WikiPageService,
     {provide: ErrorHandler, useClass: IonicErrorHandler},

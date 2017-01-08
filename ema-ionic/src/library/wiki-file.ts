@@ -1,6 +1,7 @@
 export class WikiFile {
-    parsed: string;
     isSearchResults: boolean;
-    constructor(public pageName: string, public contents: string) {
+    tags: string[];
+    pageName: string;
+    constructor(public contents: string, public parsed: string) {
     }
 }
