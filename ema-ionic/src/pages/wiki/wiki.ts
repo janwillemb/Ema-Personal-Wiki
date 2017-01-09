@@ -262,7 +262,9 @@ export class WikiPage {
     }
 
     //go back within wiki
+    currentPage = this.pageStack.pop(); //first remove the current page from the stack
     if (this.pageStack.length > 0) {
+      //then remove and re-set the previous page
       var previousPage = this.pageStack.pop();
       if (previousPage.isSearchResults) {
         this.showPage(previousPage);

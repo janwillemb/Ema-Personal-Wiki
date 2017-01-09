@@ -1,3 +1,4 @@
+import { TagIndexService } from '../library/tag-index.service';
 import { LoggingService } from '../library/logging-service';
 import { Settings } from '../library/settings';
 import { SettingsPage } from '../pages/settings/settings';
@@ -24,6 +25,7 @@ export class MyApp {
         private platform: Platform,
         private settings: Settings,
         private loggingService: LoggingService,
+        private tagIndexService: TagIndexService,
         private menu: MenuController) {
 
         platform.ready().then(() => {
@@ -33,6 +35,17 @@ export class MyApp {
                 this.rootPage = WikiPage;
                 this.reloadStyle();
                 setTimeout(() => Splashscreen.hide(), 100);
+
+                //prevent app going to sleep
+                if (cordova && cordova.plugins && cordova.plugins.backgroundMode) {
+                    // Called when background mode has been activated
+                    cordova.plugins.backgroundMode.onactivate = () => {
+                        cordova.plugins.backgroundMode.configure({
+                            silent: true
+                        });
+                    }
+                }
+                this.configureBackgroundMode();
             });
 
             platform.pause.subscribe(() => this.unregisterBackButton());
@@ -40,11 +53,8 @@ export class MyApp {
 
             this.registerBackButton();
 
-            //prevent app going to sleep
-            if (cordova && cordova.plugins && cordova.plugins.backgroundMode) {
-                cordova.plugins.backgroundMode.enable();
-            }
-
+            //build initial index if needed, don't wait for it.
+            this.tagIndexService.buildInitialIndex();
         });
 
         MyApp.instance = this;
@@ -68,23 +78,33 @@ export class MyApp {
 
     private onBackButton() {
         try {
-        if (this.menu.isOpen()) {
-            this.menu.close();
-        } else {
-            var activePage = this.navController.getActive();
-            if (activePage.instance.onBackButton) {
-                activePage.instance.onBackButton();
+            if (this.menu.isOpen()) {
+                this.menu.close();
             } else {
-                this.navController.pop();
+                var activePage = this.navController.getActive();
+                if (activePage.instance.onBackButton) {
+                    activePage.instance.onBackButton();
+                } else {
+                    this.navController.pop();
+                }
             }
-        }
-        } catch(err) {
+        } catch (err) {
             this.loggingService.log("Error onBackButton", err);
         }
     }
 
     reloadStyle() {
         this.styleGrey = this.settings.getStyle() === "Grey";
+    }
+
+    configureBackgroundMode() {
+        if (cordova && cordova.plugins && cordova.plugins.backgroundMode) {
+            if (this.settings.getStayActiveInBackground()) {
+                cordova.plugins.backgroundMode.enable();
+            } else {
+                cordova.plugins.backgroundMode.disable();
+            }
+        }
     }
 
     showLogs() {

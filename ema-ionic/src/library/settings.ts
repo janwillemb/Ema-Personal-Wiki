@@ -15,6 +15,7 @@ export class Settings {
     private restoreLast: boolean;
     private useCurly: boolean;
     private fontSize: number;
+    private stayActiveInBackground: boolean;
 
     constructor(private storage: Storage) {
         this.initializePromise = this.initialize();
@@ -35,6 +36,7 @@ export class Settings {
         promises.push(this.storage.get("useCurly").then(value => this.useCurly = value));
         promises.push(this.storage.get("localWikiDirectory").then(value => this.localWikiDirectory = value));
         promises.push(this.storage.get("fontSize").then(value => this.fontSize = value));
+        promises.push(this.storage.get("stayActiveInBackground").then(value => this.stayActiveInBackground = value));
         return Promise.all(promises);
     }
 
@@ -109,6 +111,20 @@ export class Settings {
         return true;
     }
 
+    setStayActiveInBackground(value: boolean): Promise<any> {
+        this.stayActiveInBackground = value;
+        return this.storage.set("stayActiveInBackground", value);
+    }
+
+    getStayActiveInBackground(): boolean {
+        var value = this.stayActiveInBackground;
+        //default is true
+        if (value === false) {
+            return false;
+        }
+        return true;
+    }
+    
     setUseCurly(value: boolean): Promise<any> {
         this.useCurly = value;
         return this.storage.set("useCurly", value);

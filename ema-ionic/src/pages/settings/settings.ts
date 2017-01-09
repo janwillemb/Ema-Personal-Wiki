@@ -23,6 +23,7 @@ export class SettingsPage {
   useCurly: boolean;
   localWikiDirectory: string;
   fontSize: number;
+  stayActiveInBackground: boolean;
 
   constructor(
     private alertController: AlertController,
@@ -48,6 +49,7 @@ export class SettingsPage {
     this.useCurly = settings.getUseCurly();
     this.styleGrey = this.styleName === "Grey";
     this.localWikiDirectory = settings.getLocalWikiDirectory();
+    this.stayActiveInBackground = settings.getStayActiveInBackground();
   }
 
   ionViewWillLeave() {
@@ -58,6 +60,8 @@ export class SettingsPage {
     this.settings.setUseCurly(this.useCurly);
     this.settings.setStyle(this.styleName)
       .then(() => MyApp.instance.reloadStyle());
+    this.settings.setStayActiveInBackground(this.stayActiveInBackground)
+      .then(() => MyApp.instance.configureBackgroundMode());
 
     this.changeWikiPath();
   }

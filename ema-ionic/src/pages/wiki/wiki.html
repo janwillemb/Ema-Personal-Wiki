@@ -24,13 +24,13 @@
   </ion-navbar>
 </ion-header>
 
-<ion-content (tap)="onTap()" [style]="fontPctStyle">
+<ion-content (tap)="onTap()">
   <ion-toolbar *ngIf="tags && tags.length > 0" class="tagsToolbar">
     <ion-buttons>
       <button ion-button outline *ngFor="let tag of tags" (click)="gotoTag(tag)">{{tag}}</button>
     </ion-buttons>
   </ion-toolbar>
-  <div padding>
+  <div padding [style]="fontPctStyle">
     <span *ngIf="!html" class="emptyPageContent">(edit the page to add content)</span>
     <div [innerHTML]="html"></div>
   </div>

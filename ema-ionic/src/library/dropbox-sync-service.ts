@@ -1,3 +1,4 @@
+import { TagIndexService } from './tag-index.service';
 import { Injectable } from '@angular/core';
 import { WikiStorage } from './wiki-storage';
 import { LoggingService } from './logging-service';
@@ -22,6 +23,7 @@ export class DropboxSyncService {
         private dropboxList: DropboxListFilesService,
         private dropboxFile: DropboxFileService,
         private loggingService: LoggingService,
+        private tagIndexService: TagIndexService,
         private wikiStorage: WikiStorage,
         private storage: Storage) {
     }
@@ -156,7 +158,7 @@ export class DropboxSyncService {
             })
             //redownload current state from dropbox (after the uploads/deletions the last state has become stale)
             .then(() => {
-                state.setTotalSteps(0);
+                state.setTotalSteps(1); //make it 99%
                 state.makingProgress("Save sync info...");
                 return this.dropboxList.listFiles(auth);
             })
@@ -174,7 +176,8 @@ export class DropboxSyncService {
             .then((newSyncState: IDropboxEntry[]) => {
                 state.makingProgress("Sync finished");
                 return this.saveLocalSyncInfo(newSyncState);
-            });
+            })
+            .then(() => this.tagIndexService.buildIndex());
 
         return state;
     }

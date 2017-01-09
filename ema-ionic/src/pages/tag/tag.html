@@ -7,7 +7,7 @@
 </ion-header>
 
 <ion-content padding>
-  <div *ngFor="let page of pageNames">
+  <div *ngFor="let page of pageNames" [style]="fontPctStyle">
     <a href="#" (click)="openPage(page)">{{page}}</a>
   </div>
 </ion-content>

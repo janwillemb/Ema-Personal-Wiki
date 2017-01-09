@@ -1,3 +1,4 @@
+import { TagIndexService } from './tag-index.service';
 import { SearchResult } from './search-result';
 import { MarkdownerService } from './markdowner.service';
 import { LoggingService } from './logging-service';
@@ -10,12 +11,13 @@ declare function require(name: string);
 @Injectable()
 export class WikiPageService {
     requestedPageName: string;
-    
+
     private xRegEx = require("xregexp");
 
     constructor(
         private wikiStorage: WikiStorage,
         private loggingService: LoggingService,
+        private tagIndexService: TagIndexService,
         private markdownerService: MarkdownerService) {
     }
 
@@ -34,11 +36,15 @@ export class WikiPageService {
     }
 
     savePage(page: WikiFile): Promise<any> {
-        return this.wikiStorage.save(this.getPageFileName(page.pageName), page.contents);
+        var fileName = this.getPageFileName(page.pageName);
+        return this.wikiStorage.save(fileName, page.contents)
+            .then(() => this.tagIndexService.afterSaveFile(fileName, page.contents));
     }
 
     deletePage(page: WikiFile): Promise<any> {
-        return this.wikiStorage.delete(this.getPageFileName(page.pageName));
+        var fileName = this.getPageFileName(page.pageName);
+        return this.wikiStorage.delete(fileName)
+            .then(() => this.tagIndexService.afterSaveFile(fileName, ""));
     }
 
     /**

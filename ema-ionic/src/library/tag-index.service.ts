@@ -6,6 +6,7 @@ import { Injectable } from '@angular/core';
 export class TagIndexService {
     private tagsRegex = /^[Tt]ags\:(.+)$/m;
     private storageTagFilesPrefix = "tagFiles.";
+    private storageFileTagsPrefix = "fileTags.";
 
     constructor(
         private wikiStorage: WikiStorage,
@@ -15,6 +16,7 @@ export class TagIndexService {
     }
 
     separateTagsFromContent(content: string) {
+        content = content || "";
         var m = this.tagsRegex.exec(content);
         var tags = [];
         if (m) {
@@ -31,6 +33,38 @@ export class TagIndexService {
     getFilesForTag(tag: string): Promise<string[]> {
         return this.storage.get(this.storageTagFilesPrefix + tag)
             .then(files => files || []);
+    }
+
+    getTagsForFile(fileName: string): Promise<string[]> {
+        return this.storage.get(this.storageFileTagsPrefix + fileName)
+            .then(tags => tags || []);
+    }
+
+    afterSaveFile(fileName: string, content: string): Promise<any> {
+        var separatedTags = this.separateTagsFromContent(content);
+        return this.getTagsForFile(fileName).then(prevTags => {
+            var deletedTags = prevTags.filter(x => separatedTags.tags.indexOf(x) === -1);
+            var addedTags = separatedTags.tags.filter(x => prevTags.indexOf(x) === -1);
+
+            var delPromises = deletedTags.map(tag => this.getFilesForTag(tag)
+                .then(files => this.storage.set(this.storageTagFilesPrefix + tag, files.filter(f => f !== fileName))));
+            var addPromises = addedTags.map(tag => this.getFilesForTag(tag)
+                .then(files => this.storage.set(this.storageTagFilesPrefix + tag, files.concat([fileName]))));
+            
+            var filePromise: Promise<any>;
+            if (separatedTags.tags.length === 0)  {
+                filePromise = this.storage.remove(this.storageFileTagsPrefix + fileName);
+            } else {
+                filePromise = this.storage.set(this.storageFileTagsPrefix + fileName, separatedTags.tags);
+            }
+
+            return Promise.all(addPromises.concat(delPromises).concat([filePromise]));
+        });
+    }
+
+    buildInitialIndex(): Promise<any> {
+        return this.storage.get("tagIndexBuilt")    
+            .then(value => value ? Promise.resolve() : this.buildIndex());
     }
 
     buildIndex(): Promise<any> {
@@ -61,8 +95,11 @@ export class TagIndexService {
                 });
 
                 var setTfPromises = tagFiles.map(x => this.storage.set(this.storageTagFilesPrefix + x.tag, x.fileNames));
+                var setFtPromises = fileTags.map(x => this.storage.set(this.storageFileTagsPrefix + x.fileName, x.tags));
 
-                return Promise.all(setTfPromises);
+                this.storage.set("tagIndexBuilt", true);
+
+                return Promise.all(setTfPromises.concat(setFtPromises));
             });
     }
 
