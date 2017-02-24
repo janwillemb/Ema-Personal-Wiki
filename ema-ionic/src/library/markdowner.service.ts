@@ -56,8 +56,15 @@ export class MarkdownerService {
 
         return new Promise((resolve, reject) => {
             try {
+                if (!storedFile.contents) {
+                    const result = new WikiFile("", "");
+                    result.tags = [];
+                    resolve(result);
+                    return;
+                }
+
                 //first remove the tags from the content
-                var tagsFromContent = this.tagIndexService.separateTagsFromContent(storedFile.contents);
+                var tagsFromContent = this.tagIndexService.separateTagsFromContent(storedFile.contents.toString());
                 var tags = tagsFromContent.tags;
 
                 //do markdown
@@ -81,12 +88,12 @@ export class MarkdownerService {
                     return match; //new wikiworded link
                 });
 
-                var result = new WikiFile(storedFile.contents, processed);
+                var result = new WikiFile(storedFile.contents.toString(), processed);
                 result.tags = tags;
                 resolve(result);
             } catch (err) {
                 this.loggingService.log("Error markdowning " + name, err);
-                var result = new WikiFile(storedFile.contents, "<strong>File could not be parsed</strong><pre>" + storedFile.contents + "</pre>");
+                var result = new WikiFile(storedFile.contents.toString(), "<strong>File could not be parsed</strong><pre>" + storedFile.contents + "</pre>");
                 resolve(result);
             }
         });

@@ -1,3 +1,4 @@
+import { LoggingService } from './logging-service';
 import { StoredFile } from './stored-file';
 import { IDropboxEntry } from './idropbox-entry';
 import { Settings } from './settings';
@@ -9,14 +10,14 @@ import { DropboxBase } from './dropbox-base';
 @Injectable()
 export class DropboxFileService extends DropboxBase {
 
-    constructor(http: Http, settings: Settings) {
-        super(http, settings);
+    constructor(http: Http, settings: Settings, loggingService: LoggingService) {
+        super(http, settings, loggingService);
     }
 
     download(entry: IDropboxEntry, auth: IDropboxAuth, byRevision?: boolean): Promise<StoredFile> {
         return new Promise<StoredFile>((resolve, reject) => {
-            this.downloadText(byRevision ? "rev:" + entry.rev : entry.id, auth).subscribe(
-                (value: string) => resolve(new StoredFile(entry.name, value)),
+            this.downloadFile(byRevision ? "rev:" + entry.rev : entry.id, auth).subscribe(
+                (value: ArrayBuffer | string) => resolve(new StoredFile(entry.name, value)),
                 (error: any) => reject(error)
             );
         });
@@ -36,7 +37,7 @@ export class DropboxFileService extends DropboxBase {
     upload(file: StoredFile, auth: IDropboxAuth): Promise<any> {
         var fileName = file.fileName;
         return new Promise<any>((resolve, reject) => {
-            this.uploadText(this.settings.getRemotePath(fileName), file.contents, auth).subscribe(
+            this.uploadText(this.settings.getRemotePath(fileName), file.contents.toString(), auth).subscribe(
                 () => resolve(),
                 err => reject(err)
             );

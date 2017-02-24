@@ -31,7 +31,8 @@
     </ion-buttons>
   </ion-toolbar>
   <div padding [style]="fontPctStyle">
-    <span *ngIf="!html" class="emptyPageContent">(edit the page to add content)</span>
+    <span *ngIf="!html && fileAccess" class="emptyPageContent">(edit the page to add content)</span>
+    <span *ngIf="!fileAccess" class="emptyPageContent">(Allow the wiki to access local files)</span>
     <div [innerHTML]="html"></div>
   </div>
 </ion-content>

@@ -1,3 +1,4 @@
+import { WikiStorage } from '../../library/wiki-storage';
 import { TagPage } from '../tag/tag';
 import { SyncState } from '../../library/sync-state';
 import { MyApp } from '../../app/app.component';
@@ -35,6 +36,7 @@ export class WikiPage {
   searchTerm: string;
   showSearch: boolean;
   canEdit: boolean;
+  fileAccess: boolean;
 
   @ViewChild(Content) wikiContentElement: Content;
 
@@ -68,8 +70,10 @@ export class WikiPage {
     //allow ema: links
     var realSanitize = sanitizer.sanitize;
     sanitizer.sanitize = (context: SecurityContext, value: any): string => {
+      var personalWikiDir = WikiStorage.storageDir + this.settings.getLocalWikiDirectory();
       var sanitized = realSanitize.apply(sanitizer, [context, value]);
       sanitized = sanitized.replace(/unsafe:ema:/g, "ema:");
+      sanitized = sanitized.replace(/unsafe:emafile:/g, personalWikiDir + "/");
       return sanitized;
     };
 
@@ -90,7 +94,11 @@ export class WikiPage {
     if (this.settings.getRestoreLast()) {
       firstPage = this.settings.getLastPageName() || this.homePageName;
     }
-    this.gotoPage(firstPage);
+
+    this.wikiPageService.checkStorage().then(() => {
+      this.fileAccess = true;
+      this.gotoPage(firstPage);
+    });
   }
 
   ionViewWillEnter() {
@@ -120,7 +128,8 @@ export class WikiPage {
 
   private planAutoSync() {
     let isHandlingInterval = false;
-    this.syncInterval = setInterval(() => {
+
+    const doAutoSync = () => {
       if (isHandlingInterval) {
         //after a while inactivity, the browser apparently will fire the interval for all "forgotten" periods
         return;
@@ -141,7 +150,11 @@ export class WikiPage {
         }
       }
       isHandlingInterval = false;
-    }, 10000);
+    };
+
+    this.syncInterval = setInterval(doAutoSync, 10000);
+    //and "immediately"" start one
+    setTimeout(doAutoSync, 100);
   }
 
   private processLinkClick(href: string) {
@@ -250,7 +263,7 @@ export class WikiPage {
       return;
     }
 
-    var currentPage = this.getCurrentPage(); 
+    var currentPage = this.getCurrentPage();
 
     if (!this.canGoBack) {
       if (neverQuit || currentPage.pageName !== this.homePageName) {
@@ -324,7 +337,7 @@ export class WikiPage {
     return this.gotoPage(currentPage.pageName);
   }
 
-  sync(): void {
+  public sync(): void {
     if (this.isSyncing) {
       return;
     }

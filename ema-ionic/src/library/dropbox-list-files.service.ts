@@ -1,3 +1,4 @@
+import { LoggingService } from './logging-service';
 import { Settings } from './settings';
 import { DropboxBase } from './dropbox-base';
 import { IDropboxEntry } from './idropbox-entry';
@@ -13,8 +14,8 @@ export class DropboxListFilesService extends DropboxBase {
     private auth: IDropboxAuth;
     private ignoreCase = require("ignore-case");
 
-    constructor(http: Http, settings: Settings) {
-        super(http, settings);
+    constructor(http: Http, settings: Settings, logginService: LoggingService) {
+        super(http, settings, logginService);
     }
 
     listFiles(auth: IDropboxAuth, includeDeleted?: boolean): Promise<IDropboxEntry[]> {

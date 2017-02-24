@@ -48,8 +48,8 @@ export class DropboxSyncService {
             })
             //get contents of all local files to compare with known checksum
             .then(() => this.wikiStorage.listFiles())
-            .then((allLocalFiles: string[]) => {
-                var promises = allLocalFiles.map(x => this.wikiStorage.getFileContents(x));
+            .then((allLocalTextFiles: string[]) => {
+                var promises = allLocalTextFiles.map(x => this.wikiStorage.getTextFileContents(x));
                 return Promise.all(promises);
             })
             .then((allLocalFiles: StoredFile[]) => {
@@ -90,8 +90,11 @@ export class DropboxSyncService {
                     if (x.deleted) {
                         return false; //just re-upload it in case of deletion (deletions are already excluded in the "filesToUpload" check)
                     }
-                    var wasChangedLocally = state.localChangedFiles.find(y => this.ignoreCase.equals(x.name, y.fileName));
-                    return wasChangedLocally;
+                    if (!x.name.endsWith(".txt")) {
+                        return false; //merge can't be done on non-textfiles 
+                    }
+                    const localChangedFile = state.localChangedFiles.find(y => this.ignoreCase.equals(x.name, y.fileName));
+                    return !!localChangedFile;
                 });
 
                 //create the promises
@@ -167,7 +170,7 @@ export class DropboxSyncService {
                 var allSucceeded = allRemoteFiles.filter(x => state.failedFiles.indexOf(x.name) === -1);
                 //calculate all checksums (= open all files to get contents to calc the checksum)
                 var checksumPromises = allSucceeded.filter(x => x.isFile).map(x =>
-                    this.wikiStorage.getFileContents(x.name).then(file => {
+                    this.wikiStorage.getTextFileContents(x.name).then(file => {
                         x.checksum = file.checksum;
                         return x;
                     }));
@@ -198,18 +201,28 @@ export class DropboxSyncService {
 
         return Promise.all([downloadCurrent, downloadParentRevision])
             .then((resolved: StoredFile[]) => {
-                var latestRemoteState = resolved[0];
-                var parentStateOfLocalChange = resolved[1];
+                const latestRemoteState = resolved[0];
+                const parentStateOfLocalChange = resolved[1];
 
-                let origin = parentStateOfLocalChange.contents;
-                let update1 = latestRemoteState.contents;
-                let update2 = localFile.contents;
-                let merged = this.mergeText.merge(origin, update1, update2);
+                const remoteContents = latestRemoteState.contents as string;
+                const localContents = localFile.contents as string;
+                const commonParent = parentStateOfLocalChange.contents;
+                let newContents = localContents;
+                try {
+                    if (remoteContents !== localContents) {
+                        const merged = this.mergeText.merge(commonParent, remoteContents, localContents);
+                        newContents = merged.toString();
+                    }
+                } catch (err) {
+                    //take the local version, since the remote version is already present and uploaded
+                    //and can always be rolled back
+                }
 
-                return this.wikiStorage.save(localFile.fileName, merged.toString());
+                return this.wikiStorage.save(localFile.fileName, newContents);
             })
+
             //merge done, now upload result to dropbox
-            .then(() => this.wikiStorage.getFileContents(localFile.fileName))
+            .then(() => this.wikiStorage.getTextFileContents(localFile.fileName))
             .then((newLocalFile: StoredFile) => this.dropboxFile.upload(newLocalFile, auth))
             .then(() => state.makingProgress())
             .catch(err => {

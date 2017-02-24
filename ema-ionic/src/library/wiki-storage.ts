@@ -10,8 +10,6 @@ declare function require(name: string);
 @Injectable()
 export class WikiStorage {
 
-    private useSdCard: boolean;
-    private storageDir: string;
     private readonly personalWikiPrefix: string = "PersonalWiki.";
     private checksum = require("checksum");
 
@@ -20,23 +18,30 @@ export class WikiStorage {
         private settings: Settings,
         private storage: Storage) {
 
-        this.useSdCard = cordova && cordova.file;
-        if (this.useSdCard) {
-            this.storageDir = cordova.file.externalRootDirectory;
+    }
+
+    private static get useSdCard(): boolean {
+        return cordova && cordova.file;
+    }
+
+    static get storageDir(): string {
+        if (WikiStorage.useSdCard) {
+            return cordova.file.externalRootDirectory;
         }
+        return "";
     }
 
     private getPersonalWikiDir(): string {
-        return this.storageDir + this.settings.getLocalWikiDirectory();
+        return WikiStorage.storageDir + this.settings.getLocalWikiDirectory();
     }
 
     listFiles(): Promise<string[]> {
         //prepar dir
         return this.initialize()
             .then(() => {
-                if (this.useSdCard) {
+                if (WikiStorage.useSdCard) {
                     //list files in the sd card dir
-                    return File.listDir(this.storageDir, this.settings.getLocalWikiDirectory())
+                    return File.listDir(WikiStorage.storageDir, this.settings.getLocalWikiDirectory())
                         .then((entries: Entry[]) => entries
                             //filter: only files
                             .filter(x => x.isFile)
@@ -53,12 +58,32 @@ export class WikiStorage {
             });
     }
 
+    // wait until storage is available
+    checkStorage(): Promise<any> {
+        return new Promise<any>((resolve, reject) => {
+            if (!WikiStorage.useSdCard) {
+                resolve();
+                return;
+            }
+            const testFileName = ".testWriteAccess";
+            return File.writeFile(this.getPersonalWikiDir(), testFileName, ".", { replace: true })
+                .then(() => File.readAsText(this.getPersonalWikiDir(), testFileName))
+                .then(() => {
+                    resolve();
+                    File.removeFile(this.getPersonalWikiDir(), testFileName)
+                        .catch(() => { });
+                })
+                //retry after 1 second
+                .catch(() => setTimeout(() => this.checkStorage().then(() => resolve()), 1000));
+        });
+    }
+
     /*
         Get a file from the wiki storage
     */
-    getFileContents(fileName: string): Promise<StoredFile> {
+    getTextFileContents(fileName: string): Promise<StoredFile> {
         var promise: Promise<any>;
-        if (this.useSdCard) {
+        if (WikiStorage.useSdCard) {
             //read the file from sd card (that is, start reading and harvest the promise)
             promise = new Promise((resolve, reject) => {
                 var readAction = () =>
@@ -88,8 +113,8 @@ export class WikiStorage {
     /**
      * save a file to the wiki storage
      */
-    save(fileName: string, contents: string): Promise<any> {
-        if (this.useSdCard) {
+    save(fileName: string, contents: any): Promise<any> {
+        if (WikiStorage.useSdCard) {
             return File.writeFile(this.getPersonalWikiDir(),
                 fileName,
                 contents,
@@ -102,7 +127,7 @@ export class WikiStorage {
     }
 
     delete(fileName: string): Promise<any> {
-        if (this.useSdCard) {
+        if (WikiStorage.useSdCard) {
             return File.removeFile(this.getPersonalWikiDir(), fileName);
         } else {
             return this.storage.remove(this.personalWikiPrefix + fileName);
@@ -110,8 +135,8 @@ export class WikiStorage {
     }
 
     move(oldDir: string, newDir: string) {
-        if (this.useSdCard) {
-            return File.moveDir(this.storageDir, oldDir, this.storageDir, newDir);
+        if (WikiStorage.useSdCard) {
+            return File.moveDir(WikiStorage.storageDir, oldDir, WikiStorage.storageDir, newDir);
         }
         return Promise.resolve();
     }
@@ -120,14 +145,14 @@ export class WikiStorage {
      * make sure the directory exists
      */
     private initialize(): Promise<any> {
-        if (this.useSdCard) {
-            return File.checkDir(this.storageDir, this.settings.getLocalWikiDirectory())
+        if (WikiStorage.useSdCard) {
+            return File.checkDir(WikiStorage.storageDir, this.settings.getLocalWikiDirectory())
                 .then(exists => {
                     if (!exists) {
                         throw "doesn't exist";
                     }
                 })
-                .catch(err => File.createDir(this.storageDir, this.settings.getLocalWikiDirectory(), false));
+                .catch(err => File.createDir(WikiStorage.storageDir, this.settings.getLocalWikiDirectory(), false));
         } else {
             return Promise.resolve();
         }

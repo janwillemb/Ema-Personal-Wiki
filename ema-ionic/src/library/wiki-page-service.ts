@@ -21,8 +21,12 @@ export class WikiPageService {
         private markdownerService: MarkdownerService) {
     }
 
+    checkStorage(): Promise<any> {
+        return this.wikiStorage.checkStorage();
+    }
+
     getPage(name: string): Promise<WikiFile> {
-        return this.wikiStorage.getFileContents(this.getPageFileName(name))
+        return this.wikiStorage.getTextFileContents(this.getPageFileName(name))
             .catch(err => {
                 this.loggingService.log("Error getting " + name + ".txt from store", err);
                 return new StoredFile("", "");
@@ -87,7 +91,7 @@ export class WikiPageService {
     private search(file: string, regex: any): Promise<SearchResult> {
         const maxHits = 10;
 
-        return this.wikiStorage.getFileContents(file)
+        return this.wikiStorage.getTextFileContents(file)
             .then(storedFile => {
                 var pageName = this.getPageNameFromFile(storedFile.fileName);
                 var result = new SearchResult(pageName);
@@ -98,7 +102,7 @@ export class WikiPageService {
                 }
 
                 var firstIndex: number = -1;
-                while ((m = regex.exec(storedFile.contents)) !== null) {
+                while ((m = regex.exec(storedFile.contents.toString())) !== null) {
                     firstIndex = m.index;
                     result.relevance += 1;
 
@@ -109,9 +113,9 @@ export class WikiPageService {
 
                 if (result.relevance) {
                     if (firstIndex > -1) {
-                        result.snippet = storedFile.contents.substring(
+                        result.snippet = storedFile.contents.toString().substring(
                             Math.max(0, firstIndex - 20),
-                            Math.min(storedFile.contents.length - 1, firstIndex + 25));
+                            Math.min(storedFile.contents.toString().length - 1, firstIndex + 25));
 
                         var hits = 0;
                         result.snippet = result.snippet.replace(regex, match => {

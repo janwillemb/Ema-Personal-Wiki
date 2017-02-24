@@ -50,9 +50,9 @@ export class TagIndexService {
                 .then(files => this.storage.set(this.storageTagFilesPrefix + tag, files.filter(f => f !== fileName))));
             var addPromises = addedTags.map(tag => this.getFilesForTag(tag)
                 .then(files => this.storage.set(this.storageTagFilesPrefix + tag, files.concat([fileName]))));
-            
+
             var filePromise: Promise<any>;
-            if (separatedTags.tags.length === 0)  {
+            if (separatedTags.tags.length === 0) {
                 filePromise = this.storage.remove(this.storageFileTagsPrefix + fileName);
             } else {
                 filePromise = this.storage.set(this.storageFileTagsPrefix + fileName, separatedTags.tags);
@@ -63,16 +63,17 @@ export class TagIndexService {
     }
 
     buildInitialIndex(): Promise<any> {
-        return this.storage.get("tagIndexBuilt")    
+        return this.storage.get("tagIndexBuilt")
             .then(value => value ? Promise.resolve() : this.buildIndex());
     }
 
     buildIndex(): Promise<any> {
         return this.wikiStorage.listFiles()
             .then(fileNames => {
-                var promises = fileNames.map(name => this.wikiStorage.getFileContents(name)
+                fileNames = fileNames.filter(x => x.endsWith(".txt"));
+                var promises = fileNames.map(name => this.wikiStorage.getTextFileContents(name)
                     .then(storedFile => {
-                        var tagsFromContent = this.separateTagsFromContent(storedFile.contents);
+                        var tagsFromContent = this.separateTagsFromContent(storedFile.contents.toString());
                         return {
                             fileName: storedFile.fileName,
                             tags: tagsFromContent.tags
@@ -82,24 +83,26 @@ export class TagIndexService {
                 return Promise.all(promises);
             })
             .then(fileTags => {
-                var uniqueTags = fileTags
-                    .map(x => x.tags)
-                    .reduce((a, b) => a.concat(b)) //"selectMany"
-                    .filter((tag, index, array) => array.indexOf(tag) === index); //distinct
+                if (fileTags && fileTags.length) {
+                    var uniqueTags = fileTags
+                        .map(x => x.tags)
+                        .reduce((a, b) => a.concat(b)) //"selectMany"
+                        .filter((tag, index, array) => array.indexOf(tag) === index); //distinct
 
-                var tagFiles = uniqueTags.map(tag => {
-                    return {
-                        tag,
-                        fileNames: fileTags.filter(x => x.tags.indexOf(tag) > -1).map(x => x.fileName)
-                    };
-                });
+                    var tagFiles = uniqueTags.map(tag => {
+                        return {
+                            tag,
+                            fileNames: fileTags.filter(x => x.tags.indexOf(tag) > -1).map(x => x.fileName)
+                        };
+                    });
 
-                var setTfPromises = tagFiles.map(x => this.storage.set(this.storageTagFilesPrefix + x.tag, x.fileNames));
-                var setFtPromises = fileTags.map(x => this.storage.set(this.storageFileTagsPrefix + x.fileName, x.tags));
+                    var setTfPromises = tagFiles.map(x => this.storage.set(this.storageTagFilesPrefix + x.tag, x.fileNames));
+                    var setFtPromises = fileTags.map(x => this.storage.set(this.storageFileTagsPrefix + x.fileName, x.tags));
 
-                this.storage.set("tagIndexBuilt", true);
+                    this.storage.set("tagIndexBuilt", true);
 
-                return Promise.all(setTfPromises.concat(setFtPromises));
+                    return Promise.all(setTfPromises.concat(setFtPromises));
+                } 
             });
     }
 

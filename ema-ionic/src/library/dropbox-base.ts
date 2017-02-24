@@ -1,3 +1,4 @@
+import { LoggingService } from './logging-service';
 import { Settings } from './settings';
 import { Observable } from 'rxjs/Rx';
 import { RequestOptionsArgs } from '@angular/http/src/interfaces';
@@ -8,7 +9,7 @@ declare function require(name: string);
 export class DropboxBase {
     private serializeError = require("serialize-error");
 
-    constructor(private http: Http, protected settings: Settings) {
+    constructor(private http: Http, protected settings: Settings, private logginService: LoggingService) {
 
     }
 
@@ -65,7 +66,7 @@ export class DropboxBase {
         });
     }
 
-    protected downloadText(path: string, auth: IDropboxAuth): Observable<string> {
+    protected downloadFile(path: string, auth: IDropboxAuth): Observable<string | ArrayBuffer> {
 
         var headers = this.createHeader(auth);
         headers.append("Dropbox-API-Arg", this.stringifyApiArg({
@@ -78,12 +79,17 @@ export class DropboxBase {
 
         return this.add401catch(
             this.http.post("https://content.dropboxapi.com/2/files/download", null, options)
-                .map((response: Response) => response.text()));
+                .map((response: Response) => {
+                    if (path.endsWith(".txt")) {
+                        return response.text;
+                    }
+                    return response.arrayBuffer();
+                }));
     }
 
     private stringifyApiArg(apiArg: any) {
         var json = JSON.stringify(apiArg)
-        json  = json.replace(/[\u007F-\uFFFF]/g, function(chr) {
+        json = json.replace(/[\u007F-\uFFFF]/g, function (chr) {
             return "\\u" + ("0000" + chr.charCodeAt(0).toString(16)).substr(-4)
         });
         return json;
