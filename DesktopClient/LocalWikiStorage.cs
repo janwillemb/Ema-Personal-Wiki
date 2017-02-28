@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 
 namespace EmaPersonalWiki
 {
@@ -39,7 +40,7 @@ namespace EmaPersonalWiki
 
             FileHelpers.DoRetryableFileIO(() =>
             {
-                using (var sw = new StreamWriter(file.OpenWrite()))
+                using (var sw = new StreamWriter(file.OpenWrite(), Encoding.UTF8))
                 {
                     sw.Write(text);
                     sw.Close();

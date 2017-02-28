@@ -66,7 +66,7 @@ export class DropboxBase {
         });
     }
 
-    protected downloadFile(path: string, auth: IDropboxAuth): Observable<string | ArrayBuffer> {
+    protected downloadFile(path: string, isText: boolean, auth: IDropboxAuth): Observable<string | ArrayBuffer> {
 
         var headers = this.createHeader(auth);
         headers.append("Dropbox-API-Arg", this.stringifyApiArg({
@@ -74,14 +74,14 @@ export class DropboxBase {
         }));
 
         let options: RequestOptionsArgs = {
-            headers: headers
+            headers: headers,
         };
 
         return this.add401catch(
             this.http.post("https://content.dropboxapi.com/2/files/download", null, options)
                 .map((response: Response) => {
-                    if (path.endsWith(".txt")) {
-                        return response.text;
+                    if (isText) {
+                        return response.text();
                     }
                     return response.arrayBuffer();
                 }));

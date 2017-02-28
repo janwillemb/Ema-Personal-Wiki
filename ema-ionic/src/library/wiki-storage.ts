@@ -88,7 +88,7 @@ export class WikiStorage {
             promise = new Promise((resolve, reject) => {
                 var readAction = () =>
                     File.readAsText(this.getPersonalWikiDir(), fileName)
-                        .then((contents) => resolve(contents));
+                        .then(contents => resolve(contents));
 
                 readAction()
                     //retry after 500 ms on failure
