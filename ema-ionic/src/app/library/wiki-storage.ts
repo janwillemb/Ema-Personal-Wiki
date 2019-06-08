@@ -5,6 +5,7 @@ import { Injectable } from '@angular/core';
 import { File, Entry } from '@ionic-native/file/ngx';
 import { Storage } from '@ionic/storage';
 import * as  hash from 'object-hash';
+import { AndroidPermissions } from '@ionic-native/android-permissions/ngx';
 
 declare var cordova: any;
 
@@ -15,10 +16,10 @@ export class WikiStorage {
 
     constructor(
         private file: File,
+        private androidPermissions: AndroidPermissions,
         private loggingService: LoggingService,
         private settings: Settings,
         private storage: Storage) {
-
     }
 
     private static get useSdCard(): boolean {
@@ -64,23 +65,36 @@ export class WikiStorage {
     }
 
     // wait until storage is available
-    checkStorage(): Promise<any> {
-        return new Promise<any>((resolve, reject) => {
-            if (!WikiStorage.useSdCard) {
-                resolve();
-                return;
+    async checkStorage(): Promise<boolean> {
+        if (!WikiStorage.useSdCard) {
+            return Promise.resolve(true);
+        }
+
+        const storagePermission = this.androidPermissions.PERMISSION.WRITE_EXTERNAL_STORAGE;
+
+        let hasPermission = false;
+        try {
+            const checkResult = await this.androidPermissions.checkPermission(storagePermission);
+            if (checkResult.hasPermission) {
+                hasPermission = true;
             }
-            const testFileName = '.testWriteAccess';
-            return this.file.writeFile(this.getPersonalWikiDir(), testFileName, '.', { replace: true })
-                .then(() => this.file.readAsText(this.getPersonalWikiDir(), testFileName))
-                .then(() => {
-                    resolve();
-                    this.file.removeFile(this.getPersonalWikiDir(), testFileName)
-                        .catch(() => { });
-                })
-                // retry after 1 second
-                .catch(() => setTimeout(() => this.checkStorage().then(() => resolve()), 1000));
-        });
+        } catch (error) {
+            this.loggingService.log('error checking storage permission', error);
+        }
+
+        if (hasPermission) {
+            return Promise.resolve(true);
+        }
+
+        try {
+            const reqResult = await this.androidPermissions.requestPermission(storagePermission);
+            if (reqResult.hasPermission) {
+                return Promise.resolve(true);
+            }
+        } catch (error) {
+            this.loggingService.log('error asking storage permission', error);
+        }
+        return Promise.resolve(false);
     }
 
     /*

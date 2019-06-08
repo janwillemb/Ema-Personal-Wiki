@@ -17,7 +17,7 @@ import { Task } from 'promise-parallel-throttle';
 @Injectable()
 export class DropboxSyncService {
 
-    private readonly syncInfoStorageKey: string = '.wiki-v3-sync-info';
+    private readonly syncInfoStorageKey: string = '.wiki-v4-sync-info';
 
     constructor(
         private dropboxList: DropboxListFilesService,

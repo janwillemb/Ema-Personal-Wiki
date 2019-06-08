@@ -30,7 +30,7 @@
         <ng-container *ngIf="!isInitializing">
             <span *ngIf="!html && fileAccess" class="emptyPageContent">(edit the page to add content)</span>
             <span *ngIf="!fileAccess" class="emptyPageContent">(Allow the wiki to access local files)</span>
-            <div [innerHTML]="html"></div>
+            <div *ngIf="fileAccess && !!html" [innerHTML]="html"></div>
         </ng-container>
 
         <ng-container *ngIf="tags && tags.length > 0" class="tagsToolbar">

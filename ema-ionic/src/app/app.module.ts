@@ -32,6 +32,7 @@ import { InAppBrowser } from '@ionic-native/in-app-browser/ngx';
 import { AppMinimize } from '@ionic-native/app-minimize/ngx';
 import { IonicModule, IonicRouteStrategy } from '@ionic/angular';
 import { PubSubService } from './library/pub-sub.service';
+import { AndroidPermissions } from '@ionic-native/android-permissions/ngx';
 
 @NgModule({
     declarations: [
@@ -58,6 +59,7 @@ import { PubSubService } from './library/pub-sub.service';
         HttpClientModule
     ],
     providers: [
+        AndroidPermissions,
         PubSubService,
         Clipboard,
         DropboxAuthService,

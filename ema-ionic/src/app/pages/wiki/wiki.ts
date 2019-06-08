@@ -124,8 +124,8 @@ export class WikiPage {
             this.planAutoSync();
         });
 
-        const storagePromise = this.wikiPageService.checkStorage().then(() => {
-            this.fileAccess = true;
+        const storagePromise = this.wikiPageService.checkStorage().then((hasAccess) => {
+            this.fileAccess = hasAccess;
         });
 
         this.initializingPromise = Promise.all([settingsPromise, storagePromise]);
@@ -197,15 +197,18 @@ export class WikiPage {
     private planAutoSync() {
         let isHandlingInterval = false;
 
-        if (!this.settings.getAutoSync()) {
-            return;
-        }
-
         const doAutoSync = async () => {
             if (isHandlingInterval) {
                 // after a while inactivity, the browser apparently will fire the interval for all "forgotten" periods
                 return;
             }
+            if (!this.fileAccess) {
+                return;
+            }
+            if (!this.settings.getAutoSync()) {
+                return;
+            }
+
             isHandlingInterval = true;
             const syncMinutes = this.settings.getSyncMinutes();
             let shouldSync = true;
@@ -270,20 +273,23 @@ export class WikiPage {
 
         try {
             await this.initializingPromise;
-            const isDefault = pageName === '_default';
-            pageName = isDefault ? this.initialPageName : pageName;
 
-            if (this.pageStack.peek() !== pageName) {
-                this.pageStack.push(pageName);
+            if (this.fileAccess) {
+                const isDefault = pageName === '_default';
+                pageName = isDefault ? this.initialPageName : pageName;
+
+                if (this.pageStack.peek() !== pageName) {
+                    this.pageStack.push(pageName);
+                }
+
+                const file = await this.wikiPageService.getPage(pageName);
+                this.showPage(file);
             }
-
-            const file = await this.wikiPageService.getPage(pageName);
-            this.showPage(file);
-
         } catch (err) {
             this.log('Error loading page ' + pageName, err);
         }
         this.hideLoading();
+        this.isInitializing = false;
     }
 
     gotoTag(tag: string) {
@@ -308,8 +314,6 @@ export class WikiPage {
             // keep last page for next time the wiki is started
             this.settings.setLastPageName(page.pageName);
         }
-
-        this.isInitializing = false;
     }
 
     private hideLoading() {

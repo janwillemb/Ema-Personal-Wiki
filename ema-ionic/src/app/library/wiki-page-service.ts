@@ -19,7 +19,7 @@ export class WikiPageService {
         private markdownerService: MarkdownerService) {
     }
 
-    checkStorage(): Promise<any> {
+    checkStorage(): Promise<boolean> {
         return this.wikiStorage.checkStorage();
     }
 

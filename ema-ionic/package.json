@@ -7,9 +7,7 @@
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
-    "test": "ng test",
-    "lint": "ng lint",
-    "e2e": "ng e2e"
+    "lint": "ng lint"
   },
   "private": true,
   "dependencies": {
@@ -20,6 +18,7 @@
     "@angular/platform-browser": "^7.2.2",
     "@angular/platform-browser-dynamic": "^7.2.2",
     "@angular/router": "^7.2.2",
+    "@ionic-native/android-permissions": "^5.7.0",
     "@ionic-native/app-minimize": "^5.6.1",
     "@ionic-native/clipboard": "^5.6.0",
     "@ionic-native/core": "^5.0.0",
@@ -31,6 +30,7 @@
     "@ionic/storage": "^2.2.0",
     "cordova-android": "8.0.0",
     "cordova-clipboard": "1.2.1",
+    "cordova-plugin-android-permissions": "1.0.0",
     "cordova-plugin-appminimize": "1.0.1",
     "cordova-plugin-file": "6.0.1",
     "cordova-plugin-inappbrowser": "3.0.0",
@@ -93,7 +93,8 @@
         "ANDROID_SUPPORT_ANNOTATIONS_VERSION": "27.+"
       },
       "cordova-plugin-ionic-keyboard": {},
-      "cordova-plugin-appminimize": {}
+      "cordova-plugin-appminimize": {},
+      "cordova-plugin-android-permissions": {}
     },
     "platforms": [
       "android"
