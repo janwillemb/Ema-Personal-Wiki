@@ -1,0 +1,67 @@
+<ion-app>
+    <ion-split-pane>
+        <ion-menu>
+            <ion-header [class.grey]="styleGrey">
+                <ion-toolbar>
+                    <ion-title>PersonalWiki </ion-title>
+                </ion-toolbar>
+            </ion-header>
+            <ion-content>
+                <ion-list>
+                    <ion-menu-toggle autoHide="false">
+                        <ion-item routerLink="/wiki">
+                            <ion-icon name="home" slot="start"></ion-icon>
+                            <ion-label>
+                                Wiki
+                            </ion-label>
+                        </ion-item>
+                    </ion-menu-toggle>
+                   
+                    <ion-menu-toggle autoHide="false">
+                        <ion-item (click)="startSync()">
+                            <ion-icon name="cloud" slot="start"></ion-icon>
+                            <ion-label>
+                                Synchronize
+                            </ion-label>
+                        </ion-item>
+                    </ion-menu-toggle>
+
+                    <ion-menu-toggle autoHide="false">
+                        <ion-item routerLink="/settings">
+                            <ion-icon name="settings" slot="start"></ion-icon>
+                            <ion-label>
+                                Settings
+                            </ion-label>
+                        </ion-item>
+                    </ion-menu-toggle>
+
+                    <ion-menu-toggle autoHide="false">
+                        <ion-item routerLink="/logs">
+                            <ion-icon name="book" slot="start"></ion-icon>
+                            <ion-label>
+                                Show logs
+                            </ion-label>
+                        </ion-item>
+                    </ion-menu-toggle>
+
+                    <ion-menu-toggle autoHide="false">
+                        <ion-item routerLink="/help">
+                            <ion-icon name="help" slot="start"></ion-icon>
+                            <ion-label>
+                                Help
+                            </ion-label>
+                        </ion-item>
+                    </ion-menu-toggle>
+
+                    <ion-menu-toggle autoHide="false">
+                        <ion-item button (click)="exit()">
+                            <ion-icon name="exit" slot="start"></ion-icon>
+                            <ion-label>Exit</ion-label>
+                        </ion-item>
+                    </ion-menu-toggle>
+                </ion-list>
+            </ion-content>
+        </ion-menu>
+        <ion-router-outlet main></ion-router-outlet>
+    </ion-split-pane>
+</ion-app>

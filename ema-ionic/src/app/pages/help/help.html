@@ -1,0 +1,92 @@
+<ion-header [class.grey]="styleGrey">
+    <ion-toolbar>
+        <ion-buttons slot="start">
+            <ion-menu-button></ion-menu-button>
+            <ion-back-button></ion-back-button>
+        </ion-buttons>
+        <ion-title>Personal wiki help</ion-title>
+    </ion-toolbar>
+</ion-header>
+
+<ion-content>
+    <ion-card>
+        <ion-card-header>
+            <ion-card-title>Markdown</ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+            <p>This wiki uses Markdown as language for its pages. Please note that Markdown isn't a standard, and there
+                may
+                be differences.</p>
+            <p>
+                <a href="https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet" target="_system">Cheat
+                    sheet</a><br />
+                <a href="https://daringfireball.net/projects/markdown/syntax" target="_system">Original specs</a>
+            </p>
+            <p>
+                Some hints:</p>
+            <ul>
+                <li>Use #, ##, ### (etc) before a line to make <strong>headers</strong>.</li>
+                <li>Use two spaces and an enter after a word to cause a <strong>line break</strong> after this word.
+                </li>
+                <li>To make a <strong>bullet-list</strong>, start with two newlines, and prefix each item with "- ".
+                </li>
+                <li>For <strong>external links</strong>, just paste the link (it will be automatically recognized), or
+                    use [link text](http://example.com).</li>
+                <li><strong>Images</strong>: ![alt-text](http://example.com/some-image.jpg)
+            </ul>
+        </ion-card-content>
+    </ion-card>
+    <ion-card>
+        <ion-card-header>
+            <ion-card-title>Wikiwords</ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+            <p>Wikiwords will be automatically recognized if the word uses mixed casing: "MyNewPage" will be recognized
+                as wikiword,
+                but mynewpage won't be. If you want to manually mark a word as wikiword, surround it by two square
+                brackets:
+                [[mynewpage]].
+            </p>
+            <p>If you want to prevent a word to be recognized as wikiword, prefix it with a ~, like this: ~ChromeCast.
+            </p>
+        </ion-card-content>
+    </ion-card>
+    <ion-card>
+        <ion-card-header>
+            <ion-card-title>Tags</ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+            Include a new line at the end of the file, starting with the word "tags:" to tag a page. Separate the tags
+            by spaces. For example:
+            <pre>
+                # Page title
+
+                Page content
+
+                Tags: foo bar
+            </pre>
+            After you save this page, the tags will apear as buttons below the page. Clicking the button shows all pages
+            that have this tag.
+        </ion-card-content>
+    </ion-card>
+    <ion-card>
+        <ion-card-header>
+            <ion-card-title>About</ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+            <p>
+                This wiki is free and open source. You can find the sourcecode at <a
+                    href="https://github.com/janwillemb/Ema-Personal-Wiki"
+                    target="_system">https://github.com/janwillemb/Ema-Personal-Wiki</a>.
+                The only real stakeholder of this project is my wife. Change requests will only dealt with if done as 
+                a pullrequest, or if they originate from the one and only stakeholder, sorry. :)
+            </p>
+            <p>
+                The app icon was created by <a href="https://www.deviantart.com/mdgraphs/"
+                    target="_system">mdgraphs</a>.
+            </p>
+
+        </ion-card-content>
+    </ion-card>
+
+</ion-content>

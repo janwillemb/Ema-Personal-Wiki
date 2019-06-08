@@ -1,0 +1,57 @@
+<ion-header [class.grey]="styleGrey">
+    <ion-toolbar>
+        <ion-buttons slot="start">
+            <ion-menu-button></ion-menu-button>
+            <ion-back-button></ion-back-button>
+        </ion-buttons>
+        <ion-title>
+            Settings
+        </ion-title>
+    </ion-toolbar>
+</ion-header>
+
+<ion-content>
+    <ion-list>
+        <ion-item>
+            <ion-button (click)="clearSyncInfo()">Forget Dropbox credentials</ion-button>
+        </ion-item>
+        <ion-item>
+            <ion-button (click)="buildTagIndex()">Rebuild tag index</ion-button>
+        </ion-item>
+        <ion-item>
+            <ion-label>Auto-sync with Dropbox</ion-label>
+            <ion-toggle [(ngModel)]="autoSync"></ion-toggle>
+        </ion-item>
+        <ion-item>
+            <ion-label>Sync frequency minutes</ion-label>
+            <ion-input type="number" placeholder="10 minutes" [(ngModel)]="syncMinutes"></ion-input>
+        </ion-item>
+        <ion-item>
+            <ion-label>Local wiki dir</ion-label>
+            <ion-input [(ngModel)]="localWikiDirectory"></ion-input>
+        </ion-item>
+        <ion-item>
+            <ion-label>Wiki font size %</ion-label>
+            <ion-input type="number" [(ngModel)]="fontSize"></ion-input>
+        </ion-item>
+        <ion-item>
+            <ion-label>Style</ion-label>
+            <ion-select [(ngModel)]="styleName">
+                <ion-select-option>Blue</ion-select-option>
+                <ion-select-option>Wood</ion-select-option>
+            </ion-select>
+        </ion-item>
+        <ion-item>
+            <ion-label>Show search</ion-label>
+            <ion-toggle [(ngModel)]="showSearch"></ion-toggle>
+        </ion-item>
+        <ion-item>
+            <ion-label>Restore last page on start</ion-label>
+            <ion-toggle [(ngModel)]="restoreLast"></ion-toggle>
+        </ion-item>
+        <ion-item>
+            <ion-label>Use {{ '{' }} } for wikiwords (legacy)</ion-label>
+            <ion-toggle [(ngModel)]="useCurly"></ion-toggle>
+        </ion-item>
+    </ion-list>
+</ion-content>

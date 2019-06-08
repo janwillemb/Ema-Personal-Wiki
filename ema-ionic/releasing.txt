@@ -1,6 +1,0 @@
-
-
-C:\Program Files\Java\jdk1.8.0_111\bin
-jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -signedjar ema-signed.apk -keystore com.janwillemboer.ema.keystore android-release-unsigned.apk ema-free
-C:\Program Files (x86)\Android\android-sdk\build-tools\24.0.0
-zipalign -v 4 ema-signed.apk ema-signed-and-aligned.apk

@@ -1,0 +1,47 @@
+// http://ionicframework.com/docs/theming/
+@import '~@ionic/angular/css/core.css';
+@import '~@ionic/angular/css/normalize.css';
+@import '~@ionic/angular/css/structure.css';
+@import '~@ionic/angular/css/typography.css';
+@import '~@ionic/angular/css/display.css';
+@import '~@ionic/angular/css/padding.css';
+@import '~@ionic/angular/css/float-elements.css';
+@import '~@ionic/angular/css/text-alignment.css';
+@import '~@ionic/angular/css/text-transformation.css';
+@import '~@ionic/angular/css/flex-utils.css';
+@import 'theme/variables.scss';
+
+ion-header {
+    ion-toolbar {
+        --background: #{map-get($colors, "wiki-header-bg")} url('assets/img/wood.jpg');
+    }
+    //title text in navbar
+    ion-title {
+        --color: #{map-get($colors, "wiki-header-fg")};
+    }
+    .bar-button-default,
+    ion-icon,
+    ion-menu-button,
+    span {
+        color: #{map-get($colors, "wiki-header-fg")};
+    }
+
+    &.grey {
+        ion-toolbar {
+            --background: #{map-get($colors, "wiki-header-bg-grey")};
+        }
+
+        //title text in navbar
+        ion-title {
+            --color: #{map-get($colors, "wiki-header-fg-grey")};
+        }
+
+        .bar-button-default,
+        ion-icon,
+        ion-menu-button,
+        span {
+            --color: #{map-get($colors, "wiki-header-fg-grey")};
+        }
+    }
+}
+

@@ -1,0 +1,22 @@
+<ion-header [class.grey]="styleGrey">
+    <ion-toolbar>
+        <ion-buttons slot="start">
+            <ion-button (click)="cancel()">
+                <ion-icon slot="icon-only" name="arrow-back"></ion-icon>
+            </ion-button>
+        </ion-buttons>
+        <ion-title>Edit {{pageTitle}}</ion-title>
+        <ion-buttons slot="end">
+            <ion-button (click)="delete()">
+                <ion-icon slot="icon-only" name="trash"></ion-icon>
+            </ion-button>
+            <ion-button (click)="save()">
+                <ion-icon slot="icon-only" name="checkmark"></ion-icon>
+            </ion-button>
+        </ion-buttons>
+    </ion-toolbar>
+</ion-header>
+
+<ion-content fullscreen="true">
+    <textarea [(ngModel)]="pageContent" #pageContentTextArea [style]="fontPctStyle"></textarea>
+</ion-content>

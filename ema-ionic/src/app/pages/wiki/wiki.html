@@ -1,0 +1,51 @@
+<ion-header [class.grey]="styleGrey">
+    <ion-toolbar>
+        <ion-buttons slot="start">
+            <ion-menu-button></ion-menu-button>
+        </ion-buttons>
+        <ion-title>
+            {{pageTitle}}
+        </ion-title>
+        <ion-buttons slot="end">
+            <ion-button *ngIf="canGoBack" (click)="onBackButton()">
+                <ion-icon slot="icon-only" name="arrow-back"></ion-icon>
+            </ion-button>
+            <ion-button *ngIf="!isHome" (click)="goHome()">
+                <ion-icon slot="icon-only" name="home"></ion-icon>
+            </ion-button>
+            <ion-button *ngIf="canEdit" (click)="edit()">
+                <ion-icon slot="icon-only" name="create"></ion-icon>
+            </ion-button>
+            <ion-button (click)="sync()">
+                <ion-icon slot="icon-only" name="cloud"></ion-icon>
+                &nbsp;
+                <span *ngIf="isSyncing">{{syncProgress}}</span>
+            </ion-button>
+        </ion-buttons>
+    </ion-toolbar>
+</ion-header>
+
+<ion-content (tap)="onTap()" fullscreen="true">
+    <div padding [style]="fontPctStyle">
+        <ng-container *ngIf="!isInitializing">
+            <span *ngIf="!html && fileAccess" class="emptyPageContent">(edit the page to add content)</span>
+            <span *ngIf="!fileAccess" class="emptyPageContent">(Allow the wiki to access local files)</span>
+            <div [innerHTML]="html"></div>
+        </ng-container>
+
+        <ng-container *ngIf="tags && tags.length > 0" class="tagsToolbar">
+            <ion-button fill="outline" *ngFor="let tag of tags" (click)="gotoTag(tag)">
+                {{tag}}
+            </ion-button>
+        </ng-container>
+    </div>
+</ion-content>
+
+<ion-footer *ngIf="showSearch && !isSearch" translucent="true">
+    <ion-toolbar>
+        <ion-searchbar [(ngModel)]="searchTerm" placeholder="regular expression"></ion-searchbar>
+        <ion-buttons slot="end">
+            <ion-button (click)="search()">Search</ion-button>
+        </ion-buttons>
+    </ion-toolbar>
+</ion-footer>

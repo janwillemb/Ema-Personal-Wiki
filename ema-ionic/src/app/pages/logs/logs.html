@@ -1,0 +1,23 @@
+<ion-header [class.grey]="styleGrey">
+    <ion-toolbar>
+      <ion-buttons slot="start">
+        <ion-menu-button></ion-menu-button>
+        <ion-back-button></ion-back-button>
+      </ion-buttons>
+      <ion-title>
+        Logs
+      </ion-title>
+    </ion-toolbar>
+  </ion-header>
+
+<ion-content>
+  <ion-list>
+    <ion-button (click)="toClipboard()">
+      <ion-icon name="copy"></ion-icon>
+      Copy to clipboard
+    </ion-button>
+    <ion-item *ngFor="let line of logLines">
+      {{line}}
+    </ion-item>
+  </ion-list>
+</ion-content>
