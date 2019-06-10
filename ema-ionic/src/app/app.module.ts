@@ -33,6 +33,7 @@ import { AppMinimize } from '@ionic-native/app-minimize/ngx';
 import { IonicModule, IonicRouteStrategy } from '@ionic/angular';
 import { PubSubService } from './library/pub-sub.service';
 import { AndroidPermissions } from '@ionic-native/android-permissions/ngx';
+import { FileOpener } from '@ionic-native/file-opener/ngx';
 
 @NgModule({
     declarations: [
@@ -60,6 +61,7 @@ import { AndroidPermissions } from '@ionic-native/android-permissions/ngx';
     ],
     providers: [
         AndroidPermissions,
+        FileOpener,
         PubSubService,
         Clipboard,
         DropboxAuthService,

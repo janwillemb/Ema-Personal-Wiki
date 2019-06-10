@@ -49,8 +49,27 @@
             </p>
             <p>If you want to prevent a word to be recognized as wikiword, prefix it with a ~, like this: ~ChromeCast.
             </p>
+            <p>You can also use the internal "ema:" prefix to create a manual link to a page. In this way you can choose 
+                another text for the link: [My Custom Link Text](ema:Home).
+            </p>
         </ion-card-content>
     </ion-card>
+    <ion-card>
+        <ion-card-header>
+            <ion-card-title>Local files and images</ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+            You can link to local files and images in the wiki directory by using the prefix "emafile:". 
+            <p>For example, to include an image that resides in your PersonalWiki directory, you would add it like this</p>
+            <pre>
+                ![alt-text](emafile:image.jpg)
+            </pre>
+            <p>Or, if you want to add a link to a file in your PersonalWiki directory:</p>
+            <pre>
+                [link text](emafile:file.pdf)
+            </pre>
+        </ion-card-content>
+    </ion-card>    
     <ion-card>
         <ion-card-header>
             <ion-card-title>Tags</ion-card-title>

@@ -16,6 +16,8 @@ import { Utils } from 'src/app/library/utils';
 import { Stack } from 'src/app/library/stack';
 import { AppComponent } from 'src/app/app.component';
 import { PubSubService, EmaSubscription } from 'src/app/library/pub-sub.service';
+import { FileOpener } from '@ionic-native/file-opener/ngx';
+import { File, FileEntry } from '@ionic-native/file/ngx';
 
 @Component({
     selector: 'page-wiki',
@@ -53,6 +55,7 @@ export class WikiPage {
     private pageStack = new Stack<string>();
     private isEditing = false;
     private isWikiPageOnTop = true;
+    private localLinksDictionary: any;
 
     constructor(
         private route: ActivatedRoute,
@@ -67,6 +70,8 @@ export class WikiPage {
         private wikiPageService: WikiPageService,
         private dropboxAuthService: DropboxAuthService,
         private dropboxSyncService: DropboxSyncService,
+        private fileOpener: FileOpener,
+        private file: File,
         elementRef: ElementRef,
         renderer: Renderer2
     ) {
@@ -80,16 +85,24 @@ export class WikiPage {
             if (event.target.nodeName === 'A') {
                 this.processLinkClick(event.target.href);
             }
-            return true;
+            event.preventDefault();
+            return false;
         });
 
         // allow ema: links
         const realSanitize = sanitizer.sanitize;
         sanitizer.sanitize = (context: SecurityContext, value: any): string => {
-            const personalWikiDir = WikiStorage.storageDir + this.settings.getLocalWikiDirectory();
             let sanitized = realSanitize.apply(sanitizer, [context, value]);
             sanitized = sanitized.replace(/unsafe:ema:/g, 'ema:');
-            sanitized = sanitized.replace(/unsafe:emafile:/g, personalWikiDir + '/');
+            sanitized = sanitized.replace(/unsafe:emafile:([^'"]+)/g, (match, p1) => {
+                const filePath = this.getLocalPath(p1);
+                const win: any = window;
+                const ionicalizedFilePath = win.Ionic.WebView.convertFileSrc(filePath);
+                // keep original link in case this is not an inline image, but a url to an external file,
+                // see processLinkClick();
+                this.localLinksDictionary[ionicalizedFilePath] = filePath;
+                return ionicalizedFilePath;
+            });
             return sanitized;
         };
 
@@ -238,16 +251,38 @@ export class WikiPage {
         this.gotoPage(pageName);
     }
 
-    private processLinkClick(href: string) {
+    private getLocalPath(relativePath: string) {
+        const personalWikiDir = WikiStorage.storageDir + this.settings.getLocalWikiDirectory();
+        const fullpath = personalWikiDir + '/' + relativePath;
+        return fullpath;
+    }
+
+    private async processLinkClick(href: string) {
         href = decodeURI(href);
         const emaLinkRegex = /^ema:(.*)$/;
-        const m = emaLinkRegex.exec(href);
-        if (m) {
-            const pageName = m[1];
+        const linkMatch = emaLinkRegex.exec(href);
+        if (linkMatch) {
+            const pageName = linkMatch[1];
             this.navigateTo(pageName);
         } else {
-            window.open(href, '_system');
-            this.showToast('Opening external link...');
+            const localLink = this.localLinksDictionary[href];
+
+            if (localLink) {
+                this.showToast('Opening file...');
+                try {
+                    const fileInfo = await this.file.resolveLocalFilesystemUrl(localLink);
+
+                    (fileInfo as FileEntry).file(
+                        f => this.fileOpener.open(localLink, f.type),
+                        err => this.log('Error opening file', err));
+
+                } catch (error) {
+                    this.log('Error opening local link', error);
+                }
+            } else {
+                this.showToast('Opening url in browser...');
+                window.open(href, '_system');
+            }
         }
     }
 
@@ -297,6 +332,8 @@ export class WikiPage {
     }
 
     private showPage(page: WikiFile) {
+
+        this.localLinksDictionary = {}; // see constructor
         this.currentPage = page;
         this.pageTitle = page.pageName;
         this.html = page.parsed;
