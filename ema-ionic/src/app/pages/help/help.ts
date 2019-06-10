@@ -1,6 +1,5 @@
 import { NavController } from '@ionic/angular';
 import { Component } from '@angular/core';
-import { Settings } from 'src/app/library/settings';
 
 @Component({
     selector: 'page-help',
@@ -8,10 +7,7 @@ import { Settings } from 'src/app/library/settings';
 })
 export class HelpPage {
 
-    styleGrey: boolean;
-
-    constructor(private navController: NavController, private settings: Settings) {
-        this.styleGrey = settings.getStyle() === 'Blue';
+    constructor(private navController: NavController) {
     }
 
     close() {

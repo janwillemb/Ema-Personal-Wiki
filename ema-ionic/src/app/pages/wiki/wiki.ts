@@ -36,7 +36,6 @@ export class WikiPage {
     syncProgress: string;
     lastSync: Date;
 
-    styleGrey = true;
     searchTerm: string;
     showSearch: boolean;
     canEdit: boolean;
@@ -202,7 +201,6 @@ export class WikiPage {
     }
 
     private applySettings() {
-        this.styleGrey = this.settings.getStyle() === 'Blue';
         this.showSearch = this.settings.getShowSearch();
         this.fontPctStyle = this.sanitizer.bypassSecurityTrustStyle('font-size: ' + this.settings.getFontSize() + '%');
     }

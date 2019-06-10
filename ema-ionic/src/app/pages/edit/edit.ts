@@ -14,7 +14,6 @@ export class EditPage {
     pageContent: string;
     pageTitle: string;
     orginalContent: string;
-    styleGrey: boolean;
     fontPctStyle: SafeStyle;
 
     @ViewChild('pageContentTextArea') pageContentTextArea;
@@ -33,7 +32,6 @@ export class EditPage {
         this.pageContent = page.contents;
         this.orginalContent = this.pageContent;
 
-        this.styleGrey = settings.getStyle() === 'Blue';
         this.fontPctStyle = this.sanitizer.bypassSecurityTrustStyle('font-size: ' + settings.getFontSize() + '%');
     }
 

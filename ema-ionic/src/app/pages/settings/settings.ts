@@ -4,7 +4,6 @@ import { LoggingService } from '../../library/logging-service';
 import { IDropboxAuth } from '../../library/idropbox-auth';
 import { DropboxAuthService } from '../../library/dropbox-auth.service';
 import { DropboxSyncService } from '../../library/dropbox-sync-service';
-import { AppComponent } from '../../app.component';
 import { Settings } from '../../library/settings';
 import { Component } from '@angular/core';
 
@@ -19,7 +18,6 @@ export class SettingsPage {
     syncMinutes: number;
     autoSync: boolean;
     styleName: string;
-    styleGrey: boolean;
     showSearch: boolean;
     restoreLast: boolean;
     useCurly: boolean;
@@ -52,7 +50,6 @@ export class SettingsPage {
         this.styleNameOnStart = this.styleName;
         this.restoreLast = settings.getRestoreLast();
         this.useCurly = settings.getUseCurly();
-        this.styleGrey = this.styleName === 'Blue';
         this.localWikiDirectory = settings.getLocalWikiDirectory();
         this.stayActiveInBackground = settings.getStayActiveInBackground();
     }

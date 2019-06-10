@@ -16,7 +16,6 @@ export class TagPage implements OnInit {
 
     tag: string;
     pageNames: string[];
-    styleGrey: boolean;
     fontPctStyle: SafeStyle;
 
     constructor(
@@ -30,7 +29,6 @@ export class TagPage implements OnInit {
     }
 
     async ngOnInit() {
-        this.styleGrey = this.settings.getStyle() === 'Blue';
         this.fontPctStyle = this.sanitizer.bypassSecurityTrustStyle('font-size: ' + this.settings.getFontSize() + '%');
 
         this.tag = this.route.snapshot.paramMap.get('tag');

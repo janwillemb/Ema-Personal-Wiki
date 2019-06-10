@@ -1,7 +1,8 @@
-<ion-header [class.grey]="styleGrey">
+<ion-header>
     <ion-toolbar>
         <ion-buttons slot="start">
             <ion-menu-button></ion-menu-button>
+            <ion-icon *ngIf="isSearch" slot="icon-only" name="search"></ion-icon>
         </ion-buttons>
         <ion-title>
             {{pageTitle}}
@@ -34,7 +35,7 @@
         </ng-container>
 
         <ng-container *ngIf="tags && tags.length > 0" class="tagsToolbar">
-            <ion-button fill="outline" *ngFor="let tag of tags" (click)="gotoTag(tag)">
+            <ion-button color="secondary" fill="outline" *ngFor="let tag of tags" (click)="gotoTag(tag)">
                 {{tag}}
             </ion-button>
         </ng-container>

@@ -1,13 +1,17 @@
-<ion-header [class.grey]="styleGrey">
-  <ion-toolbar>
-    <ion-title>
-      {{tag}} (tag)
-    </ion-title>
-  </ion-toolbar>
+<ion-header>
+    <ion-toolbar>
+        <ion-buttons slot="start">
+            <ion-menu-button></ion-menu-button>
+            <ion-back-button></ion-back-button>
+        </ion-buttons>
+        <ion-title>
+            {{tag}} (tag)
+        </ion-title>
+    </ion-toolbar>
 </ion-header>
 
 <ion-content padding>
-  <div *ngFor="let page of pageNames" [style]="fontPctStyle">
-    <a (click)="goto(page)">{{page}}</a>
-  </div>
+    <div *ngFor="let page of pageNames" [style]="fontPctStyle">
+        <a (click)="goto(page)">{{page}}</a>
+    </div>
 </ion-content>

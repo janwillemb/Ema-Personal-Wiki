@@ -171,10 +171,12 @@ export class Settings {
     }
 
     getStyle(): string {
-        if (this.style !== 'Wood') {
+        const acceptedStyles = ['Wood', 'Blue', 'Dark'];
+
+        if (acceptedStyles.indexOf(this.style) === -1) {
             return 'Blue';
         }
-        return 'Wood';
+        return this.style;
     }
 
     setStyle(value: string): Promise<any> {

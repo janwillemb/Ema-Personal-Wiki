@@ -11,17 +11,14 @@ import { Clipboard } from '@ionic-native/clipboard/ngx';
 })
 export class LogsPage {
   logLines: string[];
-  styleGrey: boolean;
 
   constructor(
-    settings: Settings,
     loggingService: LoggingService,
     private clipboard: Clipboard,
     private navCtrl: NavController,
     private toastController: ToastController) {
 
     this.logLines = loggingService.consumeLogLines();
-    this.styleGrey = settings.getStyle() === 'Blue';
   }
 
   onBackButton() {

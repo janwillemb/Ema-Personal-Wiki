@@ -38,6 +38,7 @@
     "cordova-plugin-inappbrowser": "3.0.0",
     "cordova-sqlite-storage": "3.2.0",
     "core-js": "^2.5.4",
+    "hammerjs": "^2.0.8",
     "ignore-case": "^0.1.0",
     "marked": "^0.6.2",
     "object-hash": "^1.3.1",

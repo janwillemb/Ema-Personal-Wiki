@@ -1,7 +1,9 @@
-<ion-app>
+<!-- the 'className' input binding make the app go blank in production on Android
+    whenever the className changes -->
+<ion-app [class.Blue]="themeBlue" [class.Wood]="themeWood" [class.Dark]="themeDark">
     <ion-split-pane>
         <ion-menu>
-            <ion-header [class.grey]="styleGrey">
+            <ion-header>
                 <ion-toolbar>
                     <ion-title>PersonalWiki </ion-title>
                 </ion-toolbar>
@@ -16,7 +18,7 @@
                             </ion-label>
                         </ion-item>
                     </ion-menu-toggle>
-                   
+
                     <ion-menu-toggle autoHide="false">
                         <ion-item (click)="startSync()">
                             <ion-icon name="cloud" slot="start"></ion-icon>
