@@ -31,14 +31,14 @@ export class DropboxFileService extends DropboxBase {
             }).subscribe(
                 () => resolve(),
                 err => reject(err)
-                );
+            );
         });
     }
 
     upload(file: StoredFile, auth: IDropboxAuth): Promise<any> {
         const fileName = file.fileName;
         return new Promise<any>((resolve, reject) => {
-            this.uploadText(this.settings.getRemotePath(fileName), file.contents.toString(), auth).subscribe(
+            this.uploadFile(this.settings.getRemotePath(fileName), file.contents, auth).subscribe(
                 () => resolve(),
                 err => reject(err)
             );

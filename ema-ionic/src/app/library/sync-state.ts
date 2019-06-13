@@ -20,7 +20,7 @@ export class SyncState {
     promise: Promise<any>;
     progress = new Subject<SyncProgress>();
 
-    private syncProgress = new SyncProgress();
+    syncProgress = new SyncProgress();
 
     constructor(private loggingService: LoggingService) {
     }

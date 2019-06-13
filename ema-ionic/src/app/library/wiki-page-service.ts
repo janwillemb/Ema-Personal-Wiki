@@ -24,7 +24,7 @@ export class WikiPageService {
     }
 
     getPage(name: string): Promise<WikiFile> {
-        return this.wikiStorage.getTextFileContents(this.getPageFileName(name))
+        return this.wikiStorage.getFileContents(this.getPageFileName(name))
             .catch(err => {
                 this.loggingService.log('Error getting ' + name + '.txt from store', err);
                 return new StoredFile('', '');
@@ -91,7 +91,7 @@ export class WikiPageService {
     private search(file: string, regex: any): Promise<SearchResult> {
         const maxHits = 10;
 
-        return this.wikiStorage.getTextFileContents(file)
+        return this.wikiStorage.getFileContents(file)
             .then(storedFile => {
                 const pageName = this.getPageNameFromFile(storedFile.fileName);
                 const result = new SearchResult(pageName);

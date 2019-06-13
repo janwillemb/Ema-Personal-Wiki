@@ -80,7 +80,7 @@ export class DropboxBase {
         return json;
     }
 
-    protected uploadText(path: string, contents: string, auth: IDropboxAuth): Observable<any> {
+    protected uploadFile(path: string, contents: string | ArrayBuffer, auth: IDropboxAuth): Observable<any> {
         let headers = this.createHeader(auth);
 
         headers = headers.append('Dropbox-API-Arg', this.stringifyApiArg({

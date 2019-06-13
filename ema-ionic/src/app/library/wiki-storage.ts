@@ -4,7 +4,7 @@ import { StoredFile } from './stored-file';
 import { Injectable } from '@angular/core';
 import { File, Entry } from '@ionic-native/file/ngx';
 import { Storage } from '@ionic/storage';
-import * as  hash from 'object-hash';
+import * as hash from 'object-hash';
 import { AndroidPermissions } from '@ionic-native/android-permissions/ngx';
 
 declare var cordova: any;
@@ -41,27 +41,26 @@ export class WikiStorage {
         return WikiStorage.storageDir + this.settings.getLocalWikiDirectory();
     }
 
-    listFiles(): Promise<string[]> {
+    async listFiles(): Promise<string[]> {
         // prepar dir
-        return this.initialize()
-            .then(() => {
-                if (WikiStorage.useSdCard) {
-                    // list files in the sd card dir
-                    return this.file.listDir(WikiStorage.storageDir, this.settings.getLocalWikiDirectory())
-                        .then((entries: Entry[]) => entries
-                            // filter: only files
-                            .filter(x => x.isFile)
-                            .map(x => x.name));
-                } else {
-                    // list storage keys
-                    return this.storage.keys()
-                        .then(keys => keys
-                            // filter: only files that start with our magical key
-                            .filter(x => x.startsWith(this.personalWikiPrefix))
-                            // remove our magical key
-                            .map(x => x.slice(this.personalWikiPrefix.length)));
-                }
-            });
+        await this.initialize();
+
+        if (WikiStorage.useSdCard) {
+            // list files in the sd card dir
+            const entries = await this.file.listDir(WikiStorage.storageDir, this.settings.getLocalWikiDirectory());
+            // filter: only files
+            return entries
+                .filter(x => x.isFile)
+                .map(x => x.name);
+        } else {
+            // list storage keys
+            const keys = await this.storage.keys();
+            return keys
+                // filter: only files that start with our magical key
+                .filter(x => x.startsWith(this.personalWikiPrefix))
+                // remove our magical key
+                .map(x => x.slice(this.personalWikiPrefix.length));
+        }
     }
 
     // wait until storage is available
@@ -100,18 +99,23 @@ export class WikiStorage {
     /*
         Get a file from the wiki storage
     */
-    getTextFileContents(fileName: string): Promise<StoredFile> {
-        let promise: Promise<any>;
+    getFileContents(fileName: string): Promise<StoredFile> {
+        let promise: Promise<string | ArrayBuffer>;
         if (WikiStorage.useSdCard) {
             // read the file from sd card (that is, start reading and harvest the promise)
             promise = new Promise((resolve, reject) => {
-                const readAction = () =>
-                    this.file.readAsText(this.getPersonalWikiDir(), fileName)
-                        .then(contents => resolve(contents));
+                const readAction = () => {
+                    if (fileName.endsWith('.txt')) {
+                        return this.file.readAsText(this.getPersonalWikiDir(), fileName)
+                            .then(contents => resolve(contents));
+                    } else {
+                        return this.file.readAsArrayBuffer(this.getPersonalWikiDir(), fileName)
+                            .then(contents => resolve(contents));
+                    }
+                };
 
-                readAction()
-                    // retry after 500 ms on failure
-                    .catch(() => setTimeout(() => readAction().catch((err) => reject(err)), 500));
+                // retry after 500 ms on failure
+                readAction().catch(() => setTimeout(() => readAction().catch((err) => reject(err)), 500));
             });
         } else {
             // read the file from sqlite storage
@@ -120,8 +124,14 @@ export class WikiStorage {
 
         return promise.then(contents => {
             const s = new StoredFile(fileName, contents);
-            if (contents && typeof (contents) === 'string') {
-                s.checksum = hash(contents);
+            if (contents) {
+                if (typeof contents === 'string') {
+                    s.checksum = hash(contents);
+                } else {
+                    // don't calc checksum over binary files which tend to be very large
+                    // just use the file size.
+                    s.checksum = contents.byteLength.toString();
+                }
             }
             return s;
         }).catch(err => {

@@ -71,7 +71,7 @@ export class TagIndexService {
         return this.wikiStorage.listFiles()
             .then(fileNames => {
                 fileNames = fileNames.filter(x => x.endsWith('.txt'));
-                const promises = fileNames.map(name => this.wikiStorage.getTextFileContents(name)
+                const promises = fileNames.map(name => this.wikiStorage.getFileContents(name)
                     .then(storedFile => {
                         const tagsFromContent = this.separateTagsFromContent(storedFile.contents.toString());
                         return {
